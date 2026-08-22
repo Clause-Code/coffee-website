@@ -1,0 +1,2462 @@
+/* ══════════════════════════════════════════════════════════════════════
+   BEANS & BLOOM
+   Type: Fraunces (variable display serif) / Archivo (grotesk)
+   Palette: deep espresso base, per-flavour accents tweened by GSAP.
+   Layout rule: no centred 1200px container. Everything sits on a 12-col
+   bleed grid and is allowed to run off the edges.
+   ══════════════════════════════════════════════════════════════════ */
+
+@font-face { font-family:'Poppins'; src:url('fonts/poppins-400.woff2') format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Poppins'; src:url('fonts/poppins-600.woff2') format('woff2'); font-weight:600; font-display:swap; }
+@font-face { font-family:'Poppins'; src:url('fonts/poppins-700.woff2') format('woff2'); font-weight:700; font-display:swap; }
+@font-face { font-family:'Poppins'; src:url('fonts/poppins-800.woff2') format('woff2'); font-weight:800; font-display:swap; }
+
+:root {
+  /* Cream base, warm brown ink, orange accent — matched to the reference. */
+  --bg:      #F2E8D6;
+  --bg-deep: #4A1B03;   /* loader / deep chocolate */
+  --ink:     #2A1A10;
+  --accent:  #E8712F;   /* orange CTA */
+  --glow:    #C98B52;
+  --dim:     #8A6B52;
+  --display: #B07A52;   /* oversized brown display type */
+
+  --gut: clamp(18px, 4.4vw, 68px);
+  --hair: rgba(42,26,16,.16);
+
+  --d: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+  --g: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+
+  --e-out: cubic-bezier(.16,1,.3,1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--g);
+  font-weight: 400;
+  letter-spacing: -.01em;
+  font-size: clamp(15px, 1.05vw, 17px);
+  line-height: 1.55;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .1s linear;
+}
+body.is-loading { overflow: hidden; height: 100vh; }
+
+/* Lenis */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+img { display: block; max-width: 100%; }
+canvas { display: block; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: none; }
+a { color: inherit; text-decoration: none; cursor: none; }
+ol, ul { list-style: none; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* ── shared editorial atoms ─────────────────────────────────────── */
+.eyebrow {
+  font-size: 11px; letter-spacing: .28em; text-transform: uppercase;
+  color: var(--accent); font-weight: 500; display: inline-block;
+}
+.eyebrow::before {
+  content: ''; display: inline-block; width: 26px; height: 1px;
+  background: currentColor; vertical-align: middle; margin-right: 12px;
+  opacity: .6;
+}
+
+/* ══ GRAIN + AMBIENT ════════════════════════════════════════════ */
+.grain {
+  position: fixed; inset: -120%; z-index: 9998; pointer-events: none;
+  opacity: .07; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grainshift 6s steps(6) infinite;
+}
+@keyframes grainshift {
+  0%{transform:translate(0,0)} 20%{transform:translate(-3%,2%)}
+  40%{transform:translate(2%,-3%)} 60%{transform:translate(-2%,-2%)}
+  80%{transform:translate(3%,1%)} 100%{transform:translate(0,0)}
+}
+.ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.ambient__blob {
+  position: absolute; border-radius: 50%; filter: blur(130px); opacity: .16;
+  background: var(--glow); will-change: transform;
+}
+.ambient__blob--a { width: 46vw; height: 46vw; top: -10vw; right: -8vw; }
+.ambient__blob--b { width: 38vw; height: 38vw; bottom: -12vw; left: -10vw; opacity: .2; }
+
+/* ══ CURSOR ═════════════════════════════════════════════════════ */
+.cursor, .cursor-ring {
+  position: fixed; top: 0; left: 0; z-index: 9999; pointer-events: none;
+  transform: translate3d(-100px,-100px,0);
+}
+.cursor__dot {
+  display: block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent); margin: -3.5px 0 0 -3.5px;
+}
+.cursor-ring {
+  width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 50%;
+  border: 1px solid var(--accent); opacity: .45;
+}
+@media (hover: none) { .cursor, .cursor-ring { display: none; } body, a, button { cursor: auto; } }
+
+/* ══ LOADER ═════════════════════════════════════════════════════ */
+.loader {
+  position: fixed; inset: 0; z-index: 9990;
+  background: var(--bg-deep);
+  display: grid; place-items: center;
+}
+.loader__inner { position: relative; display: grid; place-items: center; }
+.loader__canvas { width: min(360px, 46vw); height: min(220px, 28vw); }
+.loader__particles {
+  position: absolute; inset: 50% auto auto 50%;
+  width: 620px; height: 620px; transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+.loader__meta {
+  position: absolute; left: var(--gut); right: var(--gut); bottom: calc(var(--gut) + 26px);
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 11px; letter-spacing: .26em; text-transform: uppercase; color: var(--dim);
+}
+.loader__count i { font-family: var(--d); font-style: normal; font-size: 34px; color: var(--ink); letter-spacing: 0; }
+.loader__count em { font-style: normal; margin-left: 3px; }
+.loader__rule {
+  position: absolute; left: var(--gut); right: var(--gut); bottom: var(--gut);
+  height: 1px; background: var(--hair);
+}
+.loader__rule span { display: block; height: 100%; width: 0%; background: var(--accent); }
+
+/* ══ HEADER ═════════════════════════════════════════════════════ */
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 900;
+  display: flex; align-items: center; gap: 28px;
+  padding: 22px var(--gut);
+  background: transparent;
+  transition: padding .5s var(--e-out);
+}
+.header::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background: color-mix(in srgb, var(--bg) 62%, transparent);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border-bottom: 1px solid var(--hair);
+  opacity: 0; transition: opacity .55s var(--e-out);
+}
+.header.is-stuck::before { opacity: 1; }
+.header.is-stuck { padding-top: 14px; padding-bottom: 14px; }
+
+.brand { display: flex; align-items: center; gap: 11px; margin-right: auto; }
+.brand__mark { width: 34px; height: 34px; color: var(--accent); overflow: visible; }
+.brand__type {
+  font-family: var(--d); font-size: 19px; font-weight: 500;
+  letter-spacing: -.01em; letter-spacing: -.02em;
+}
+.brand__type em { font-style: italic; color: var(--accent); margin: 0 2px; }
+
+.nav { display: flex; gap: 34px; }
+.nav__link {
+  position: relative; display: inline-block; overflow: hidden;
+  font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+  height: 1.35em; line-height: 1.35em;
+}
+.nav__link > span, .nav__link .clone { display: block; will-change: transform; }
+.nav__link .clone { position: absolute; inset: 0; color: var(--accent); }
+
+/* CTA — pill, magnetic */
+.cta {
+  position: relative; overflow: hidden; border-radius: 100px;
+  border: 1px solid var(--accent);
+  padding: 11px 24px; font-size: 12px; letter-spacing: .16em; text-transform: uppercase;
+  display: inline-flex; align-items: center; will-change: transform;
+}
+.cta__fill {
+  position: absolute; inset: 0; background: var(--accent);
+  transform: translate3d(0,101%,0); border-radius: 100px 100px 0 0;
+}
+.cta__label { position: relative; z-index: 2; display: block; }
+.cta--lg { padding: 17px 38px; font-size: 13px; margin-top: 40px; }
+
+.burger { display: none; flex-direction: column; gap: 5px; padding: 8px; }
+.burger span { display: block; width: 22px; height: 1px; background: var(--ink); }
+
+/* ══ SECTION 1 — HERO ═══════════════════════════════════════════ */
+.hero {
+  position: relative; height: 100svh; min-height: 620px;
+  overflow: hidden; isolation: isolate;
+}
+.hero__type {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; flex-direction: column; justify-content: center;
+  padding-left: var(--gut); pointer-events: none;
+}
+.hero__h1 {
+  font-family: var(--d); font-weight: 300;
+  font-size: clamp(84px, 20.5vw, 300px);
+  line-height: .78; letter-spacing: -.045em;
+  letter-spacing: -.035em;
+}
+.hero__line { display: block; overflow: hidden; }
+.hero__line .w { display: inline-block; will-change: transform; }
+.hero__line--a { margin-left: 0; }
+/* second line runs off the right edge on purpose */
+.hero__line--b { margin-left: clamp(24px, 13vw, 210px); }
+.hero__line--b .bloom { font-style: italic; color: var(--accent);  }
+/* the ampersand sits in the negative space to the LEFT of "Bloom",
+   clear of the cup, so the brand always reads as Beans & Bloom */
+.hero__h1 .amp {
+  font-style: italic; opacity: .42; font-size: .34em;
+  vertical-align: .78em; margin-right: .1em; color: var(--ink);
+}
+
+/* Cup sits BETWEEN the two type lines in z-space */
+.hero__stage {
+  position: absolute; z-index: 3;
+  left: 50%; top: 52%; transform: translate(-50%,-50%);
+  width: clamp(160px, 20vw, 290px); pointer-events: none;
+  will-change: transform;
+}
+.hero__cup { width: 100%; height: auto; filter: drop-shadow(0 42px 60px rgba(0,0,0,.6)); }
+.hero__steam {
+  position: absolute; left: 50%; bottom: 62%; width: 150%; height: 130%;
+  transform: translateX(-50%);
+  mix-blend-mode: screen; opacity: .5; pointer-events: none;
+}
+
+.hero__side {
+  position: absolute; z-index: 4; width: clamp(74px, 9vw, 128px);
+  opacity: .3; filter: grayscale(.4) brightness(.8); will-change: transform, opacity;
+  transition: opacity .5s var(--e-out), filter .5s var(--e-out);
+}
+.hero__side img { width: 100%; }
+.hero__side--l { left: clamp(6px, 3vw, 58px); bottom: 25vh; transform: rotate(-7deg); }
+.hero__side--r { right: clamp(6px, 2.4vw, 46px); top: 31vh; transform: rotate(6deg); }
+
+.hero__label {
+  position: absolute; z-index: 5; right: var(--gut); bottom: 14vh;
+  text-align: right; max-width: 260px;
+}
+.hero__label-idx { display: block; font-size: 11px; letter-spacing: .3em; color: var(--dim); margin-bottom: 8px; }
+.hero__label-name {
+  display: block; overflow: hidden; font-family: var(--d); font-size: 30px;
+  font-style: italic; line-height: 1.1; color: var(--accent);
+}
+.hero__label-tag { display: block; overflow: hidden; font-size: 13px; color: var(--dim); margin-top: 4px; }
+.hero__label-name > span, .hero__label-tag > span { display: block; }
+
+.hero__meta {
+  position: absolute; z-index: 5; font-size: 11px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--dim); line-height: 1.7;
+}
+.hero__meta--l { left: var(--gut); bottom: 7vh; }
+.hero__meta--r { right: var(--gut); top: 14vh; text-align: right; }
+.rc-hint { font-style: normal; color: var(--accent); }
+
+.scroll-ind {
+  position: absolute; z-index: 5; left: 50%; bottom: 26px; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.scroll-ind__line {
+  position: relative; display: block; width: 1px; height: 54px; background: var(--hair);
+  overflow: hidden;
+}
+.scroll-ind__line i { position: absolute; left: 0; top: 0; width: 1px; height: 16px; background: var(--accent); }
+.scroll-ind__txt { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--dim); }
+
+/* ══ FLAVOUR CONTEXT MENU ═══════════════════════════════════════ */
+.flavmenu {
+  position: fixed; z-index: 950; top: 0; left: 0; min-width: 224px;
+  background: color-mix(in srgb, var(--bg-deep) 84%, transparent);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--hair); border-radius: 2px;
+  padding: 14px 0 8px; opacity: 0; pointer-events: none;
+  transform-origin: top left;
+}
+.flavmenu.is-open { pointer-events: auto; }
+.flavmenu__title {
+  display: block; padding: 0 18px 12px; font-size: 10px; letter-spacing: .28em;
+  text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--hair);
+}
+.flavmenu__item {
+  position: relative; display: flex; align-items: center; gap: 13px; width: 100%;
+  padding: 13px 18px; text-align: left; overflow: hidden;
+}
+.flavmenu__item i {
+  width: 11px; height: 11px; border-radius: 50%; background: var(--sw); flex: 0 0 auto;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sw) 20%, transparent);
+}
+.flavmenu__item span { font-family: var(--d); font-size: 17px; flex: 1; }
+.flavmenu__item em { font-style: normal; font-size: 10px; letter-spacing: .2em; color: var(--dim); }
+.flavmenu__item::before {
+  content: ''; position: absolute; inset: 0; background: var(--sw); opacity: .1;
+  transform: scaleX(0); transform-origin: left; z-index: -1;
+}
+
+/* ══ SECTION 2 — FLAVOUR STORY (pinned) ═════════════════════════ */
+.story { position: relative; }
+.story__pin {
+  position: relative; height: 100svh; overflow: hidden; isolation: isolate;
+}
+.story__bg { position: absolute; inset: 0; z-index: 0; background: var(--bg); }
+.story__wipe {
+  position: absolute; inset: 0; z-index: 6; background: var(--bg-deep);
+  clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
+  pointer-events: none;
+}
+.story__head {
+  position: absolute; z-index: 5; top: 96px; left: var(--gut); right: var(--gut);
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.story__counter { font-size: 11px; letter-spacing: .26em; color: var(--dim); }
+.story__counter i { font-family: var(--d); font-style: normal; font-size: 30px; color: var(--accent); letter-spacing: 0; margin-right: 6px; }
+
+.story__stage {
+  position: absolute; z-index: 2; inset: 0; display: grid; place-items: center;
+  pointer-events: none;
+}
+/* cup pushed off centre — asymmetry is the point */
+.story__canvas {
+  position: absolute; left: 62%; top: 50%; transform: translate(-50%,-50%);
+  width: clamp(210px, 26vw, 380px); height: auto; aspect-ratio: 520/724;
+  opacity: 0; visibility: hidden;
+}
+.story__canvas.is-active { opacity: 1; visibility: visible; }
+
+.story__panels { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.story__panel { position: absolute; inset: 0; opacity: 0; visibility: hidden; }
+.story__panel.is-live { visibility: visible; }
+
+.story__name {
+  position: absolute; left: var(--gut); top: 50%; transform: translateY(-50%);
+  font-family: var(--d); font-weight: 300; font-size: clamp(58px, 11vw, 168px);
+  line-height: .84; letter-spacing: -.045em; font-style: italic;
+   max-width: 6em;
+  pointer-events: none;
+}
+.story__name span { display: block; overflow: hidden; }
+.story__name span > i { display: block; font-style: italic; }
+.story__name .ghost {
+  -webkit-text-stroke: 1px var(--accent); color: transparent; opacity: .5;
+}
+
+.callouts {
+  position: absolute; right: var(--gut); bottom: 13vh; width: min(330px, 40vw);
+  display: flex; flex-direction: column; gap: 26px;
+}
+.callout { position: relative; padding-left: 46px; opacity: 0; }
+.callout__n {
+  position: absolute; left: 0; top: 2px; font-family: var(--d); font-size: 13px;
+  color: var(--accent); font-style: italic;
+}
+.callout__n::after {
+  content: ''; position: absolute; left: 0; top: 22px; width: 1px; height: 0;
+  background: var(--accent); opacity: .4;
+}
+.callout h4 { font-family: var(--d); font-size: 21px; font-weight: 400; line-height: 1.2; margin-bottom: 5px; }
+.callout p { font-size: 13px; color: var(--dim); line-height: 1.6; }
+
+.story__progress {
+  position: absolute; z-index: 5; left: var(--gut); right: var(--gut); bottom: 34px;
+  height: 1px; background: var(--hair);
+}
+.story__progress span { display: block; height: 100%; width: 0; background: var(--accent); transform-origin: left; }
+
+/* ══ SECTION 3 — ORIGIN ═════════════════════════════════════════ */
+.origin { position: relative; padding: 18vh 0 16vh; }
+.origin__intro {
+  padding: 0 var(--gut); margin-bottom: 14vh;
+  display: grid; grid-template-columns: 1fr 1.35fr; gap: 40px; align-items: start;
+}
+.origin__lede {
+  font-family: var(--d); font-size: clamp(24px, 3.4vw, 46px); line-height: 1.18;
+  font-weight: 300; letter-spacing: -.02em; max-width: 16em;
+}
+.origin__lede em { font-style: italic; color: var(--accent); }
+
+.origin__track {
+  position: absolute; left: calc(var(--gut) + 4px); top: 34vh; bottom: 16vh;
+  width: 1px; background: var(--hair);
+}
+.origin__track span { display: block; width: 100%; height: 0; background: var(--accent); }
+
+.origin__steps { display: flex; flex-direction: column; gap: 16vh; padding: 0 var(--gut); }
+.step {
+  position: relative; display: grid; gap: clamp(20px, 4vw, 64px); align-items: center;
+  grid-template-columns: 1fr 1fr;
+}
+.step--l { grid-template-areas: 'media body'; margin-right: clamp(0px, 12vw, 200px); }
+.step--r { grid-template-areas: 'body media'; margin-left: clamp(0px, 16vw, 260px); }
+.step--l .step__media { grid-area: media; } .step--l .step__body { grid-area: body; }
+.step--r .step__media { grid-area: media; } .step--r .step__body { grid-area: body; }
+
+.step__num {
+  position: absolute; z-index: 3; font-family: var(--d); font-weight: 300;
+  font-size: clamp(80px, 13vw, 210px); line-height: 1; letter-spacing: -.05em;
+  color: transparent; -webkit-text-stroke: 1px var(--accent); opacity: .32;
+  pointer-events: none; will-change: transform;
+}
+.step--l .step__num { left: -.12em; top: -.36em; }
+.step--r .step__num { right: -.12em; bottom: -.34em; }
+
+/* Deliberate photographic plate: hairline frame + warm inner wash, so the
+   product cut-out reads as a framed studio plate rather than a stray box. */
+.step__media {
+  position: relative; overflow: hidden; will-change: transform;
+  border: 1px solid var(--hair);
+  background:
+    radial-gradient(90% 70% at 50% 30%, color-mix(in srgb, var(--glow) 20%, transparent), transparent 70%),
+    color-mix(in srgb, var(--bg-deep) 82%, var(--glow));
+}
+.step__media::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(165deg, transparent 55%, color-mix(in srgb, var(--glow) 22%, transparent));
+  mix-blend-mode: soft-light;
+}
+.step__media img {
+  width: 100%; height: clamp(240px, 34vw, 440px); object-fit: contain;
+  padding: 28px; will-change: transform;
+}
+.step__body h3 {
+  font-family: var(--d); font-weight: 300; font-size: clamp(30px, 4.4vw, 62px);
+  line-height: 1; letter-spacing: -.03em; margin-bottom: 16px;
+}
+.step__body p { font-size: clamp(14px, 1.15vw, 17px); color: var(--dim); max-width: 30ch; line-height: 1.65; }
+.step__meta {
+  display: inline-block; margin-top: 20px; font-size: 10px; letter-spacing: .26em;
+  text-transform: uppercase; color: var(--accent); padding-top: 12px;
+  border-top: 1px solid var(--hair);
+}
+
+/* ══ SECTION 4 — MENU ═══════════════════════════════════════════ */
+.menu { position: relative; }
+.menu__pin { height: 100svh; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+.menu__head {
+  padding: 0 var(--gut); display: flex; align-items: flex-end; gap: 40px;
+  flex-wrap: wrap; margin-bottom: 6vh;
+}
+.menu__title {
+  font-family: var(--d); font-weight: 300; font-size: clamp(40px, 6.5vw, 104px);
+  line-height: .9; letter-spacing: -.04em; margin-right: auto;
+}
+.menu__title em { font-style: italic; color: var(--accent); }
+.filters { display: flex; gap: 8px; }
+.filter {
+  position: relative; padding: 9px 18px; border: 1px solid var(--hair); border-radius: 100px;
+  font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim);
+  overflow: hidden;
+}
+.filter.is-on { color: var(--bg-deep); border-color: var(--accent); }
+.filter::before {
+  content: ''; position: absolute; inset: 0; background: var(--accent); z-index: -1;
+  transform: scaleY(0); transform-origin: bottom;
+}
+.filter.is-on::before { transform: scaleY(1); }
+
+.menu__track { display: flex; gap: clamp(16px, 2.2vw, 34px); padding: 0 var(--gut); will-change: transform; }
+.mcard {
+  position: relative; flex: 0 0 auto; width: clamp(220px, 25vw, 330px);
+  overflow: hidden; will-change: transform, opacity;
+}
+.mcard__img {
+  position: relative; height: clamp(260px, 32vw, 400px); overflow: hidden;
+  border: 1px solid var(--hair);
+  background:
+    radial-gradient(80% 60% at 50% 25%, color-mix(in srgb, var(--glow) 22%, transparent), transparent 70%),
+    color-mix(in srgb, var(--bg-deep) 80%, var(--glow));
+}
+.mcard__img img { width: 100%; height: 100%; object-fit: contain; padding: 26px 18px; will-change: transform; }
+.mcard__idx {
+  position: absolute; top: 14px; left: 14px; z-index: 2; font-family: var(--d);
+  font-size: 12px; font-style: italic; color: var(--accent);
+}
+.mcard__tag {
+  position: absolute; top: 14px; right: 14px; z-index: 2; font-size: 9px;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--dim);
+}
+.mcard__over {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+  padding: 18px 16px; will-change: transform;
+  background: linear-gradient(to top, var(--bg-deep) 30%, transparent);
+  transform: translate3d(0,101%,0);
+}
+.mcard__over p { font-size: 12.5px; color: var(--dim); line-height: 1.55; }
+.mcard__foot {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 14px 2px 0; border-top: 1px solid var(--hair); margin-top: 12px;
+}
+.mcard__name { font-family: var(--d); font-size: 20px; }
+.mcard__price { font-family: var(--d); font-style: italic; color: var(--accent); font-size: 17px; }
+
+.menu__hint {
+  display: flex; align-items: center; gap: 12px; padding: 5vh var(--gut) 0;
+  font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--dim);
+}
+.menu__hint i { display: block; width: 60px; height: 1px; background: var(--accent); opacity: .5; }
+
+/* ══ SECTION 5 — COMMUNITY ══════════════════════════════════════ */
+.community { position: relative; padding: 16vh 0; overflow: hidden; isolation: isolate; }
+.community__wash {
+  position: absolute; inset: 0; z-index: -1;
+  background:
+    radial-gradient(120% 80% at 20% 0%, color-mix(in srgb, var(--glow) 26%, transparent), transparent 60%),
+    radial-gradient(100% 70% at 90% 100%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 55%),
+    var(--bg-deep);
+}
+.community__head { padding: 0 var(--gut); margin-bottom: 9vh; }
+.community__title {
+  font-family: var(--d); font-weight: 300; font-size: clamp(40px, 7vw, 118px);
+  line-height: .88; letter-spacing: -.04em; margin-top: 20px;
+}
+.community__title em { font-style: italic; color: var(--accent); }
+
+.shelves { display: flex; flex-direction: column; gap: 26px; }
+.shelf { display: flex; gap: 26px; width: max-content; will-change: transform; }
+.qcard {
+  flex: 0 0 auto; width: clamp(250px, 27vw, 380px);
+  padding: 28px 26px 24px;
+  border: 1px solid var(--hair);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(6px);
+}
+.qcard p { font-family: var(--d); font-size: clamp(16px, 1.4vw, 21px); line-height: 1.35; font-weight: 300; }
+.qcard footer {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--hair);
+  font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim);
+}
+.qcard footer em { font-style: italic; color: var(--accent); letter-spacing: 0; text-transform: none; font-family: var(--d); font-size: 13px; }
+
+/* ══ SECTION 6 — VISIT ══════════════════════════════════════════ */
+.visit {
+  position: relative; display: grid; grid-template-columns: 1.05fr 1fr;
+  align-items: center; gap: clamp(24px, 5vw, 80px);
+  padding: 16vh var(--gut); overflow: hidden; isolation: isolate;
+}
+.visit__particles { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .5; }
+.visit__map { position: relative; z-index: 1; color: var(--accent); }
+.visit__svg { width: 100%; height: auto; }
+.visit__pin { transform-origin: 300px 300px; }
+.visit__body { position: relative; z-index: 2; }
+.visit__title {
+  font-family: var(--d); font-weight: 300; font-size: clamp(44px, 7.4vw, 122px);
+  line-height: .86; letter-spacing: -.04em; margin: 22px 0 42px;
+}
+.visit__title em { font-style: italic; color: var(--accent); }
+.visit__info { display: grid; gap: 22px; max-width: 420px; }
+.visit__info div { display: grid; grid-template-columns: 130px 1fr; gap: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--hair); }
+.visit__info dt { font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--dim); padding-top: 4px; }
+.visit__info dd { font-size: 15px; line-height: 1.6; }
+
+/* ══ FOOTER ═════════════════════════════════════════════════════ */
+.footer {
+  position: relative; overflow: hidden; isolation: isolate;
+  background: var(--bg-deep); padding: 0 0 40px;
+}
+.footer__steam { position: absolute; inset: 0; z-index: 0; opacity: .16; mix-blend-mode: screen; pointer-events: none; }
+.footer__pour {
+  position: relative; z-index: 2; height: 62svh; display: grid; place-items: center;
+}
+.footer__pour canvas { width: clamp(200px, 24vw, 330px); height: auto; aspect-ratio: 640/695; }
+.footer__reveal { position: relative; z-index: 3; padding: 0 var(--gut); }
+.footer__big {
+  font-family: var(--d); font-weight: 300; font-size: clamp(52px, 15.5vw, 250px);
+  line-height: .82; letter-spacing: -.05em; margin-bottom: 9vh;
+}
+.fw { display: block; overflow: hidden; }
+.fw > span { display: block; will-change: transform; }
+.fw--i { font-style: italic; color: var(--accent); text-align: right; margin-right: -.03em; }
+.footer__cols { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 40px; padding-bottom: 8vh; }
+.footer__col { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.footer__lab { font-size: 10px; letter-spacing: .28em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+.footer__col .nav__link { font-size: 13px; letter-spacing: .04em; text-transform: none; }
+.footer__base {
+  display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+  padding-top: 26px; border-top: 1px solid var(--hair);
+  font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim);
+}
+
+/* ══ RESPONSIVE ═════════════════════════════════════════════════
+   Pins/scrubs are simplified (not removed) on touch — see js/main.js
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .origin__intro { grid-template-columns: 1fr; }
+  .visit { grid-template-columns: 1fr; }
+  .visit__map { max-width: 460px; }
+}
+@media (max-width: 760px) {
+  .nav { display: none; }
+  .burger { display: flex; }
+  .cta { display: none; }
+  .header.is-open .nav {
+    display: flex; position: absolute; inset: 100% 0 auto; flex-direction: column;
+    gap: 18px; padding: 24px var(--gut) 30px;
+    background: color-mix(in srgb, var(--bg-deep) 96%, transparent);
+    border-bottom: 1px solid var(--hair);
+  }
+  .hero__h1 { font-size: clamp(60px, 21vw, 130px); }
+  .hero__line--b { margin-left: 12vw; }
+  .hero__stage { width: 46vw; top: 50%; }
+  .hero__side { width: 21vw; opacity: .42; }
+  .hero__side--l { bottom: 8vh; left: 4px; }
+  .hero__side--r { top: 16vh; right: 4px; }
+  .hero__label { bottom: 21vh; max-width: 52vw; }
+  .hero__label-name { font-size: 23px; }
+  .hero__meta--l { bottom: 21vh; }
+  .hero__meta--r { top: 14vh; }
+  .story__canvas { left: 50%; top: 40%; width: 46vw; }
+  .story__name { top: auto; bottom: 44vh; transform: none; font-size: clamp(44px, 15vw, 90px); }
+  .callouts { left: var(--gut); right: var(--gut); width: auto; bottom: 9vh; gap: 16px; }
+  .callout h4 { font-size: 17px; }
+  .callout p { font-size: 12px; }
+  .step { grid-template-columns: 1fr; gap: 18px; }
+  .step--l, .step--r { margin: 0; grid-template-areas: 'media' 'body'; }
+  .step--l .step__num, .step--r .step__num { left: auto; right: 0; top: -.28em; bottom: auto; }
+  .step__media img { height: 240px; }
+  .menu__pin { height: auto; padding: 14vh 0; }
+  .menu__track { overflow-x: auto; scrollbar-width: none; padding-bottom: 10px; }
+  .menu__track::-webkit-scrollbar { display: none; }
+  .mcard { width: 68vw; }
+  .footer__cols { grid-template-columns: 1fr; gap: 30px; }
+  .footer__pour { height: 44svh; }
+  .footer__pour canvas { width: 44vw; }
+  .fw--i { text-align: left; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grain { animation: none; }
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   REFERENCE BUILD — cream theme, cup row hero, oversized display Section 2.
+   Appended last so it wins over the earlier editorial rules.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── header: logo left, nav centred, utilities right ── */
+.header { justify-content: space-between; }
+.header::before { background: color-mix(in srgb, var(--bg) 78%, transparent); }
+.brand__type { font-weight: 700; font-size: 17px; letter-spacing: -.02em; }
+.brand__type em { font-style: normal; color: var(--accent); }
+.nav {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  gap: clamp(16px, 2.1vw, 34px);
+}
+.nav__link { font-size: 11.5px; font-weight: 600; letter-spacing: .07em; }
+.cta { border-color: var(--ink); border-radius: 8px; padding: 10px 20px; font-weight: 600; }
+.cta__fill { background: var(--accent); border-radius: 8px; }
+
+/* ── HERO ─────────────────────────────────────────────────────────── */
+.hero { height: 100svh; min-height: 640px; background: var(--bg); }
+.hero::after {           /* soft warm vignette like the reference */
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(72% 58% at 50% 42%, transparent 40%,
+              color-mix(in srgb, var(--glow) 26%, transparent));
+}
+
+.hstats {
+  position: absolute; z-index: 6; top: 15vh; right: var(--gut);
+  display: flex; gap: clamp(20px, 3vw, 46px); text-align: center;
+}
+.hstats b { display: block; font-size: clamp(17px, 1.7vw, 24px); font-weight: 700; letter-spacing: -.03em; }
+.hstats span { font-size: 10px; color: var(--dim); letter-spacing: .04em; }
+
+/* the cup row — overlapping, bleeding off both edges, never centred */
+.hrow { position: absolute; inset: 0; z-index: 3; }
+.hcup {
+  position: absolute; display: block; padding: 0; border: 0; background: none;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 34px 34px rgba(74,27,3,.30));
+}
+.hcup img { width: 100%; height: auto; display: block; }
+.hcup--a    { left: -7%;  top: 5%;   width: 26vw; z-index: 2; }
+.hcup--lead { left: 20%;  top: 10%;  width: 30vw; z-index: 5; }
+.hcup--c    { left: 50%;  top: 17%;  width: 24vw; z-index: 4; }
+.hcup--d    { right: -7%; top: 6%;   width: 27vw; z-index: 3; }
+.hero__steam {
+  position: absolute; left: 50%; bottom: 58%; width: 150%; height: 120%;
+  transform: translateX(-50%); mix-blend-mode: multiply; opacity: .22;
+}
+
+/* headline block, bottom left */
+.hcopy { position: absolute; z-index: 6; left: var(--gut); bottom: 11vh; max-width: 46vw; }
+.hseal { display: block; width: 46px; height: 46px; color: var(--ink); opacity: .8; margin-bottom: 18px; }
+.hseal svg { width: 100%; height: 100%; }
+.hero__h1 {
+  font-family: var(--d); font-weight: 700;
+  font-size: clamp(34px, 5.3vw, 78px); line-height: 1.03;
+  letter-spacing: -.035em; color: var(--ink);
+}
+.hl { display: block; overflow: hidden; }
+.hl .w { display: block; will-change: transform; }
+.btn-orange {
+  display: inline-block; margin-top: 26px; position: relative; overflow: hidden;
+  background: var(--accent); color: #fff; border-radius: 8px;
+  padding: 13px 28px; font-size: 13px; font-weight: 600; letter-spacing: .01em;
+  will-change: transform;
+}
+.btn-orange span { position: relative; z-index: 2; }
+.btn-orange::before {
+  content: ''; position: absolute; inset: 0; background: var(--ink);
+  transform: translate3d(0,101%,0); transition: transform .45s var(--e-out);
+}
+.btn-orange:hover::before { transform: translate3d(0,0,0); }
+
+.hero__label { bottom: 11vh; right: var(--gut); text-align: right; }
+.hero__label-idx { color: var(--dim); }
+.hero__label-name { font-family: var(--d); font-weight: 700; font-style: normal; font-size: 22px; color: var(--ink); }
+.hero__label-tag { color: var(--dim); }
+.hero__meta--r { top: 10vh; right: var(--gut); text-transform: none; letter-spacing: .02em; font-size: 11px; }
+.scroll-ind__txt, .eyebrow { color: var(--dim); }
+.eyebrow { color: var(--ink); font-weight: 600; }
+
+/* ── SECTION 2 ───────────────────────────────────────────────────── */
+.story__pin, .story__bg { background: var(--bg); }
+.story__wipe { background: var(--bg-deep); }
+.story__big {
+  position: absolute; z-index: 2; left: var(--gut); right: var(--gut);
+  top: 50%; transform: translateY(-50%);
+  font-family: var(--d); font-weight: 800; color: var(--display);
+  font-size: clamp(30px, 7.4vw, 108px); line-height: 1.0;
+  letter-spacing: -.035em; text-transform: uppercase;
+  pointer-events: none;
+}
+.story__big .sl { display: block; overflow: hidden; }
+.story__big .sl > span { display: block; will-change: transform; }
+
+/* cup sits IN FRONT of the display type */
+.story__stage { z-index: 5; }
+.story__canvas { left: 50%; top: 50%; width: clamp(190px, 24vw, 340px); }
+
+.caps { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.cap {
+  position: absolute; display: block; overflow: hidden;
+  border-radius: 999px; background: color-mix(in srgb, var(--bg-deep) 88%, transparent);
+}
+.cap img { width: 100%; height: 100%; object-fit: cover; opacity: .85; }
+.cap--l { left: 12%; bottom: 26%; width: clamp(120px, 17vw, 250px); height: clamp(46px, 6vw, 84px); }
+.cap--r { right: 14%; top: 30%;  width: clamp(110px, 15vw, 220px); height: clamp(44px, 5.6vw, 78px); }
+
+.story__counter i { font-family: var(--d); font-weight: 700; color: var(--accent); }
+.story__name { display: none; }          /* replaced by .story__big */
+.callouts { bottom: 8vh; }
+.callout h4 { font-family: var(--d); font-weight: 700; font-size: 17px; letter-spacing: -.02em; }
+.callout__n { font-family: var(--d); font-style: normal; font-weight: 700; color: var(--accent); }
+.callout p { color: var(--dim); }
+
+/* ── remaining sections inherit the cream theme ── */
+.origin__lede, .step__body h3, .menu__title, .community__title, .visit__title, .footer__big {
+  font-family: var(--d); font-weight: 700; letter-spacing: -.035em;
+}
+.origin__lede em, .menu__title em, .community__title em, .visit__title em {
+  font-style: normal; color: var(--accent);
+}
+.step__num { -webkit-text-stroke: 1.5px var(--display); opacity: .45; font-weight: 800; }
+.footer { background: var(--bg-deep); }
+.footer__big { color: #F3E7D6; }
+.fw--i { color: var(--accent); font-style: normal; }
+.footer__lab, .footer__base, .footer__col .nav__link { color: #E8D9C6; }
+.community__wash { background:
+  radial-gradient(120% 80% at 20% 0%, color-mix(in srgb, var(--glow) 22%, transparent), transparent 60%),
+  color-mix(in srgb, var(--bg) 96%, #fff); }
+.qcard { background: color-mix(in srgb, #fff 55%, transparent); }
+.qcard p { font-family: var(--d); font-weight: 600; letter-spacing: -.02em; }
+.qcard footer em { font-family: var(--d); font-style: normal; font-weight: 700; color: var(--accent); }
+.mcard__img, .step__media { background: color-mix(in srgb, var(--glow) 14%, #fff); }
+.filter.is-on { color: #fff; border-color: var(--accent); }
+.filter.is-on::before { background: var(--accent); }
+.cursor__dot, .cursor-ring { border-color: var(--ink); }
+.cursor__dot { background: var(--accent); }
+
+@media (max-width: 900px) {
+  .nav { position: static; transform: none; }
+  .hstats { top: 11vh; gap: 16px; }
+  .hstats b { font-size: 15px; }
+  .hcup--a    { left: -14%; top: 6%;  width: 40vw; }
+  .hcup--lead { left: 16%;  top: 14%; width: 48vw; }
+  .hcup--c    { left: 58%;  top: 26%; width: 38vw; }
+  .hcup--d    { display: none; }
+  .hcopy { max-width: 84vw; bottom: 8vh; }
+  .hero__label { display: none; }
+  .story__big { font-size: clamp(26px, 9vw, 54px); }
+  .story__canvas { width: 46vw; }
+  .cap { display: none; }
+}
+
+/* ── LOADER: chocolate ground, cream liquid column splits the bean ──
+   Matches the reference opening: a vertical pour runs down the middle,
+   the real bean footage cracks apart around it, then the column widens
+   to wipe the hero in. The column is a UI shape, not a coffee product. */
+.loader { background: var(--bg-deep); }
+.loader__pour {
+  position: absolute; z-index: 1; top: -6%; bottom: -6%; left: 50%;
+  width: 0; transform: translateX(-50%); background: #F3E7D6;
+  clip-path: polygon(38% 0%, 62% 0%, 54% 12%, 66% 26%, 48% 40%, 62% 55%,
+                     46% 68%, 60% 82%, 44% 92%, 56% 100%, 40% 100%,
+                     34% 86%, 44% 72%, 32% 58%, 46% 42%, 32% 28%, 44% 14%);
+  will-change: width, clip-path;
+}
+.loader__inner { position: relative; z-index: 2; }
+.loader__meta, .loader__rule { z-index: 3; }
+.loader__meta { color: #C89B76; }
+.loader__count i { font-family: var(--d); font-weight: 700; color: #F3E7D6; }
+.loader__rule { background: rgba(243,231,214,.2); }
+.loader__rule span { background: var(--accent); }
+.loader__word { font-weight: 600; }
+
+/* ── composition corrections after review ── */
+/* iced cups are tall, so they need less width than the reference's squat cups */
+.hcup--a    { left: -6%;  top: 15%; width: 20vw; }
+.hcup--lead { left: 19%;  top: 11%; width: 23vw; }
+.hcup--c    { left: 45%;  top: 19%; width: 19vw; }
+.hcup--d    { right: -5%; top: 14%; width: 21vw; }
+.hcopy { bottom: 9vh; max-width: 40vw; }
+.hero__h1 { text-shadow: 0 2px 24px color-mix(in srgb, var(--bg) 70%, transparent); }
+.hero__meta--r { top: 25vh; }          /* clear of the stats row */
+.hstats { top: 14vh; }
+.hero__label { bottom: 9vh; }
+
+/* loader pour reads as a liquid river, not a diamond */
+.loader__pour {
+  clip-path: polygon(30% 0%, 70% 0%, 62% 10%, 76% 22%, 58% 34%, 72% 46%,
+                     56% 58%, 70% 70%, 54% 82%, 66% 92%, 50% 100%,
+                     34% 100%, 26% 88%, 40% 76%, 24% 62%, 38% 48%,
+                     22% 34%, 36% 22%, 24% 10%);
+}
+.caps .cap { opacity: .5; }
+
+/* ── final composition pass ──
+   The iced cups are much taller than the reference's squat paper cups, so
+   they need less width and a higher anchor to leave the headline clear. */
+.hcup--a    { left: -4%;  top: 13%;  width: 15vw; }
+.hcup--lead { left: 20%;  top: 8.5%; width: 18vw; }
+.hcup--c    { left: 44%;  top: 16%;  width: 14.5vw; }
+.hcup--d    { right: -4%; top: 12%;  width: 15.5vw; }
+.hcopy { bottom: 10vh; max-width: 44vw; }
+.hero__h1 { text-shadow: none; }
+.hero__meta--r { top: 22vh; }
+
+/* display type stops short of the callout column so nothing overlaps */
+.story__big { right: 31%; font-size: clamp(28px, 5.9vw, 86px); }
+.callouts { width: min(300px, 27vw); bottom: 12vh; gap: 20px; }
+.callout { padding-left: 38px; }
+.callout p { font-size: 12.5px; }
+
+/* capsules read as soft texture bars, not brown blobs */
+.cap { opacity: .32; filter: saturate(.7); }
+.cap--l { left: 5%;  bottom: 17%; }
+.cap--r { right: 33%; top: 22%; }
+
+@media (max-width: 900px) {
+  .hcup--a { left: -12%; top: 14%; width: 34vw; }
+  .hcup--lead { left: 20%; top: 11%; width: 40vw; }
+  .hcup--c { left: 58%; top: 20%; width: 32vw; }
+  .story__big { right: var(--gut); }
+  .callouts { position: static; width: auto; margin-top: 60vh; padding: 0 var(--gut); }
+}
+
+/* keep each display line on one line, as in the reference */
+.story__big { right: 22%; font-size: clamp(24px, 4.75vw, 74px); }
+.story__big .sl > span { white-space: nowrap; }
+.cap--r { right: 8%; top: 16%; }
+.cap--l { left: 4%; bottom: 14%; }
+@media (max-width: 900px) {
+  .story__big { right: var(--gut); font-size: clamp(20px, 6.4vw, 40px); }
+}
+
+/* ══ HERO CUP ROW — all four cups identical in size ══════════════
+   Positions 1-2 ride high, 3-4 sit low. The low pair animates up to
+   meet the high pair once the loader hands off (see js/hero.js).   */
+.hcup, .hcup--a, .hcup--lead, .hcup--c, .hcup--d { width: 23vw; }
+.hcup--p1 { left: -2%; top: 6%;  z-index: 2; right: auto; }
+.hcup--p2 { left: 22%; top: 6%;  z-index: 3; right: auto; }
+.hcup--p3 { left: 46%; top: 15%; z-index: 5; right: auto; }   /* lead */
+.hcup--p4 { left: 70%; top: 15%; z-index: 4; right: auto; }
+
+/* headline deliberately overlaps the first cup, as in the reference */
+.hcopy { z-index: 7; bottom: 9vh; max-width: 42vw; }
+.hero__h1 { text-shadow: 0 1px 18px color-mix(in srgb, var(--bg) 55%, transparent); }
+
+@media (max-width: 900px) {
+  .hcup, .hcup--p1, .hcup--p2, .hcup--p3, .hcup--p4 { width: 42vw; }
+  .hcup--p1 { left: -8%; top: 8%; }
+  .hcup--p2 { left: 34%; top: 8%; }
+  .hcup--p3 { left: 6%;  top: 30%; }
+  .hcup--p4 { left: 50%; top: 30%; }
+  .hcopy { max-width: 86vw; }
+}
+
+/* scale pass: leave a clean pocket bottom-left for the headline, and widen
+   the gap between the high pair and the low pair so the rise reads clearly */
+.hcup, .hcup--p1, .hcup--p2, .hcup--p3, .hcup--p4 { width: 20vw; }
+.hcup--p1 { left: -3%; top: 3%;  }
+.hcup--p2 { left: 21%; top: 3%;  }
+.hcup--p3 { left: 45%; top: 14%; }
+.hcup--p4 { left: 69%; top: 14%; }
+.hero__h1 { text-shadow: none; }
+.hcopy { bottom: 8vh; max-width: 46vw; }
+.hero__label { bottom: 7vh; }
+.hstats { top: 13vh; }
+.hero__meta--r { top: 20vh; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   MERGED HERO + STORY (v2, React build)
+   One pinned stage, two halves sharing the same background. The lead cup
+   is a single <canvas> that lives in half 1 and physically travels into
+   half 2 — there is no second cup waiting there.
+   ══════════════════════════════════════════════════════════════════ */
+.herostory { position: relative; }
+.herostory__pin {
+  position: relative; height: 100svh; min-height: 620px;
+  overflow: hidden; isolation: isolate; background: var(--bg);
+}
+.herostory__pin::after {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(72% 58% at 50% 42%, transparent 40%,
+              color-mix(in srgb, var(--glow) 24%, transparent));
+}
+.half { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.half--hero > *, .half--story > * { pointer-events: auto; }
+.half--story { z-index: 3; }
+
+/* cup row sits above half 1 copy, below half 2 type is handled per-element */
+.hrow { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+.hcup { pointer-events: auto; }
+
+/* side cups keep the still's aspect; the lead canvas is sized so the cup
+   INSIDE its frame reads the same height as its neighbours */
+.hcup--side { width: 20vw; }
+.hcup--lead { width: 33vw; }
+.hcup__canvas { width: 100%; aspect-ratio: 520 / 724; display: block; }
+
+.hcup--p1 { left: -3%;  top: 3%;  z-index: 2; }
+.hcup--p2 { left: 15%;  top: 1%;  z-index: 5; }   /* lead — wider box, so shifted */
+.hcup--p3 { left: 48%;  top: 14%; z-index: 4; }
+.hcup--p4 { left: 72%;  top: 14%; z-index: 3; }
+
+/* half 2 */
+.half--story .story__head {
+  position: absolute; top: 96px; left: var(--gut); right: var(--gut);
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.half--story .story__big {
+  position: absolute; z-index: 2; left: var(--gut); right: 22%;
+  top: 50%; transform: translateY(-50%);
+  font-family: var(--d); font-weight: 800; color: var(--display);
+  font-size: clamp(24px, 4.75vw, 74px); line-height: 1;
+  letter-spacing: -.035em; text-transform: uppercase; pointer-events: none;
+}
+.half--story .story__panel { position: absolute; inset: 0; }
+.story__wipe {
+  position: absolute; inset: 0; z-index: 8; background: var(--bg-deep);
+  clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%); pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .hcup--side { width: 40vw; }
+  .hcup--lead { width: 62vw; }
+  .hcup--p1 { left: -8%; top: 6%; }
+  .hcup--p2 { left: 18%; top: 2%; }
+  .hcup--p3 { left: 4%;  top: 34%; }
+  .hcup--p4 { left: 52%; top: 34%; }
+  .half--story .story__big { right: var(--gut); font-size: clamp(20px, 6.4vw, 40px); }
+}
+
+/* the duplicate reveal layer must rest below the mask even if GSAP's
+   inline transform is reverted (StrictMode double-invokes effects) */
+.nav__link .clone { transform: translateY(100%); }
+
+/* lead cup lifted so its box clears the headline pocket */
+.hcup--p2 { top: -4%; left: 18%; }
+.hcopy { max-width: 40vw; }
+
+/* hero copy sits ABOVE the cup row (reference has the headline overlapping
+   the leftmost cup, not hidden behind it); half 2 stays below the cup */
+.half--hero { z-index: 7; }
+
+/* ══ SECTION 2 CUP QUEUE ═══════════════════════════════════════════
+   .cupslot is an invisible marker holding the exact geometry a cup
+   occupies once centred. Cup 0 flies to it from the hero; cups 1 and 2
+   already sit on it and are offset right until their hand-off. One
+   shared marker keeps all three registered to the pixel. */
+.cupslot, .scup {
+  position: absolute; left: 50%; top: 50%;
+  width: 26vw; aspect-ratio: 520 / 724;
+  margin-left: -13vw; margin-top: calc(-13vw * 724 / 520);
+  pointer-events: none;
+}
+.cupslot { visibility: hidden; }
+.scup { z-index: 6; opacity: 0; will-change: transform, opacity; }
+
+@media (max-width: 900px) {
+  .cupslot, .scup { width: 46vw; margin-left: -23vw; margin-top: calc(-23vw * 724 / 520); }
+}
+
+/* ══ LOADER v3 — matched to the reference rhythm ══════════════════
+   Small still bean, a short rule beneath it that grows, then a cream
+   hairline that widens into the pour and becomes the page. */
+.loader__inner { position: relative; display: grid; place-items: center; z-index: 2; }
+.loader__canvas { width: min(210px, 26vw); height: min(130px, 16vw); }
+.loader__particles {
+  position: absolute; left: 50%; top: 50%; width: 520px; height: 520px;
+  transform: translate(-50%, -50%); pointer-events: none;
+}
+/* the rule now sits directly under the bean, short and centred */
+.loader__rule {
+  position: absolute; left: 50%; top: calc(50% + 92px);
+  width: min(240px, 34vw); height: 1px;
+  transform: translateX(-50%);
+  background: rgba(243,231,214,.22);
+  display: block; overflow: hidden;
+}
+.loader__rule i {
+  display: block; width: 100%; height: 100%;
+  background: #F3E7D6; transform: scaleX(0); transform-origin: left;
+}
+/* The pour column.
+   NOTE: no percentage-based clip-path here. A zigzag polygon in % looks
+   organic while the column is a hairline, but the offsets scale with the
+   element, so by the time it is 200vw wide the "wave" becomes a chain of
+   giant diamonds. A soft asymmetric border-radius keeps the edge liquid at
+   every width instead. */
+.loader__pour {
+  position: absolute; z-index: 1; top: -6%; bottom: -6%; left: 50%;
+  width: 0; transform: translateX(-50%); background: #F3E7D6;
+  border-radius: 48% 44% 46% 42% / 3% 2% 3% 2%;
+  will-change: width;
+}
+.loader__meta { bottom: 34px; }
+
+/* ══ REVISIONS ═════════════════════════════════════════════════════ */
+
+/* menu cards: no plate behind the cup — they float on the section ground */
+.mcard__img { background: none; border: 0; }
+.mcard__img img { padding: 10px 0 0; }
+.mcard__foot { border-top: 1px solid var(--hair); }
+
+/* the board heading stays put while the strip pans horizontally */
+.menu__pin { justify-content: flex-start; padding-top: 16vh; }
+.menu__head {
+  position: relative; z-index: 5; margin-bottom: 4vh;
+  background: none; pointer-events: none;
+}
+.menu__title { margin-right: 0; }
+
+/* plain links — the masked character reveal is gone */
+.nav__link, .flink { overflow: visible; height: auto; line-height: 1.4; }
+.nav__link { display: inline-block; transition: color .3s ease; }
+.nav__link:hover { color: var(--accent); }
+.footer__col .flink {
+  display: block; font-size: 13px; letter-spacing: .01em;
+  color: #E8D9C6; transition: color .3s ease;
+}
+.footer__col .flink:hover { color: var(--accent); }
+.nav__link .clone { display: none; }
+
+/* the eyebrow rules are gone from the markup; kill the leftover spacing */
+.community__head .eyebrow, .visit__body .eyebrow { display: none; }
+
+/* review cards: the person's name leads, the source is a quiet caption */
+.qcard p { font-weight: 500; font-size: clamp(14px, 1.15vw, 17px); line-height: 1.5; letter-spacing: -.01em; }
+.qcard footer { justify-content: flex-start; gap: 12px; align-items: baseline; }
+.qcard footer em {
+  font-style: normal; font-weight: 700; font-size: 13.5px;
+  color: var(--ink); letter-spacing: -.01em; text-transform: none;
+}
+.qcard footer span {
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--dim); opacity: .8;
+}
+
+/* ══ VISIT — scroll-scrubbed walk-in ═══════════════════════════════ */
+.visit { position: relative; display: block; padding: 0; }
+.visit__pin {
+  position: relative; height: 100svh; overflow: hidden;
+  display: grid; place-items: center; isolation: isolate;
+}
+.visit__film {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; z-index: 0;
+}
+/* legibility scrim, weighted to the left where the copy sits */
+.visit__scrim {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(100deg,
+      color-mix(in srgb, var(--bg-deep) 74%, transparent) 0%,
+      color-mix(in srgb, var(--bg-deep) 46%, transparent) 38%,
+      transparent 68%);
+}
+.visit__particles { position: absolute; inset: 0; z-index: 2; opacity: .5; }
+.visit__body {
+  position: relative; z-index: 3; justify-self: start; align-self: center;
+  padding-left: var(--gut); max-width: min(520px, 46vw); color: #FFF6EA;
+  will-change: transform, opacity;
+}
+.visit__title { color: #FFF6EA; margin: 0 0 40px; }
+.visit__title em { color: var(--accent); font-style: normal; }
+.visit__info dt { color: rgba(255,246,234,.62); }
+.visit__info dd { color: #FFF6EA; }
+.visit__info div { border-bottom: 1px solid rgba(255,246,234,.18); }
+.visit .cta--lg { border-color: rgba(255,246,234,.55); color: #FFF6EA; }
+
+@media (max-width: 900px) {
+  .visit__body { max-width: 86vw; padding-right: var(--gut); }
+  .visit__scrim {
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--bg-deep) 72%, transparent) 0%,
+      color-mix(in srgb, var(--bg-deep) 40%, transparent) 60%, transparent 100%);
+  }
+}
+
+/* ══ LOADER v4 — blurred photographic ground, zoom-through exit ════ */
+.loader { background: #1C0E06; overflow: hidden; }
+.loader__bg {
+  position: absolute; inset: -8%; z-index: 0;
+  background-size: cover; background-position: center;
+  filter: blur(10px) saturate(1);
+  transform: scale(1.06);
+  will-change: transform, filter;
+}
+/* a soft vignette so the bean and pour stay the focal point */
+.loader::before {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(58% 58% at 50% 50%,
+    rgba(28,14,6,.04) 0%, rgba(28,14,6,.42) 62%, rgba(20,9,3,.72) 100%);
+}
+.loader__inner, .loader__pour, .loader__meta, .loader__rule { will-change: transform, filter, opacity; }
+.loader__inner { z-index: 3; }
+.loader__pour { z-index: 2; }
+.loader__meta, .loader__rule { z-index: 4; }
+
+/* ══ CUP FLIGHT — section 2 -> the board ══════════════════════════ */
+.cupflyer {
+  position: fixed; top: 0; left: 0; z-index: 60;
+  display: none; object-fit: contain; pointer-events: none;
+  will-change: transform, width, height;
+  filter: drop-shadow(0 26px 30px rgba(74,27,3,.28));
+}
+/* the first card holds its space while the cup is still in flight */
+.mcard__img { min-height: clamp(260px, 32vw, 400px); }
+
+/* ══ ADD-TO-CART SHEET ════════════════════════════════════════════ */
+.cmodal {
+  position: fixed; inset: 0; z-index: 200; display: grid; place-items: center;
+  padding: 5vh var(--gut);
+  background: color-mix(in srgb, var(--bg-deep) 62%, transparent);
+  backdrop-filter: blur(10px) saturate(1.1);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+}
+.cmodal__panel {
+  position: relative; display: grid; grid-template-columns: 0.85fr 1fr;
+  gap: clamp(16px, 3vw, 46px); align-items: center;
+  width: min(880px, 100%); max-height: 90vh;
+  padding: clamp(20px, 3vw, 46px);
+  background: var(--bg); border: 1px solid var(--hair); border-radius: 4px;
+  will-change: transform, opacity;
+}
+.cmodal__x {
+  position: absolute; top: 14px; right: 14px; width: 34px; height: 34px;
+  display: grid; place-items: center; color: var(--ink); opacity: .55;
+  border-radius: 50%; transition: opacity .25s ease, background .25s ease;
+}
+.cmodal__x:hover { opacity: 1; background: color-mix(in srgb, var(--glow) 18%, transparent); }
+.cmodal__x svg { width: 18px; height: 18px; }
+
+.cmodal__art {
+  position: relative; display: grid; place-items: center; align-self: stretch;
+  background: radial-gradient(70% 60% at 50% 45%,
+              color-mix(in srgb, var(--glow) 26%, transparent), transparent 72%);
+}
+.cmodal__art img {
+  width: 100%; max-width: 240px; height: auto;
+  filter: drop-shadow(0 26px 26px rgba(74,27,3,.26));
+  will-change: transform, opacity;
+}
+
+.cmodal__eyebrow {
+  font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: var(--dim);
+}
+.cmodal__name {
+  font-family: var(--d); font-weight: 700; letter-spacing: -.035em;
+  font-size: clamp(24px, 3vw, 40px); line-height: 1.05; margin: 8px 0 10px;
+}
+.cmodal__desc { font-size: 14px; color: var(--dim); line-height: 1.6; margin-bottom: 22px; max-width: 34ch; }
+.cmodal__row { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+.cmodal__lab {
+  font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dim); width: 46px; flex: 0 0 auto;
+}
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  padding: 8px 16px; border: 1px solid var(--hair); border-radius: 100px;
+  font-size: 12px; font-weight: 500; color: var(--dim);
+  transition: color .25s ease, border-color .25s ease, background .25s ease;
+}
+.chip.is-on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
+.cmodal__buy { margin-top: 26px; justify-content: space-between; }
+.cmodal__price { font-family: var(--d); font-weight: 700; font-size: 26px; letter-spacing: -.03em; }
+.cmodal__add { margin-top: 0; }
+
+@media (max-width: 760px) {
+  .cmodal__panel { grid-template-columns: 1fr; overflow-y: auto; }
+  .cmodal__art img { max-width: 150px; }
+  .cmodal__desc { margin-bottom: 16px; }
+}
+
+/* the shop photo is painted behind the canvas as a poster, so the room is
+   on screen the instant you arrive — the scrub then takes over from it */
+.visit__pin {
+  background-image: url('stills/shop.webp');
+  background-size: cover;
+  background-position: center;
+}
+
+/* ══ VISIT v2 — static photograph, no scrub ═══════════════════════ */
+.visit { position: relative; display: block; padding: 0; background: none; }
+.visit__pin { all: unset; }                 /* the old pinned wrapper is gone */
+.visit__shot {
+  position: relative; min-height: 92svh; overflow: hidden;
+  display: grid; place-items: center; isolation: isolate;
+}
+.visit__bg {
+  position: absolute; inset: -8%; z-index: 0;
+  background-size: cover; background-position: center;
+  will-change: transform;
+}
+.visit__film { display: none; }
+
+/* ══ LOADER v5 ═════════════════════════════════════════════════════
+   No photograph behind the bean — just a soft, heavily blurred warm
+   ground. And the pour is a clean straight column: the wavy edge read
+   as a zigzag crack, which is not what a pour looks like. */
+.loader { background: #2A1206; }
+.loader__bg {
+  position: absolute; inset: -20%; z-index: 0;
+  background:
+    radial-gradient(48% 42% at 50% 46%, rgba(150, 84, 38, .55), transparent 70%),
+    radial-gradient(70% 60% at 22% 18%, rgba(96, 48, 18, .55), transparent 72%),
+    radial-gradient(70% 60% at 82% 84%, rgba(72, 33, 12, .60), transparent 72%),
+    #2A1206;
+  filter: blur(70px);
+  transform: scale(1.05);
+  will-change: transform, filter;
+}
+.loader::before {
+  background: radial-gradient(60% 60% at 50% 50%,
+    rgba(28,14,6,0) 0%, rgba(28,14,6,.34) 66%, rgba(18,8,2,.62) 100%);
+}
+/* straight-edged pour, no zigzag */
+.loader__pour {
+  border-radius: 2px;
+  box-shadow: 0 0 34px rgba(243,231,214,.16);
+}
+/* size chips show what the size actually costs */
+.chip { display: inline-flex; align-items: baseline; gap: 7px; }
+.chip__delta { font-style: normal; font-size: 9.5px; opacity: .62; letter-spacing: .04em; }
+
+/* ══ LOGO — B&B monogram over the full name ═══════════════════════ */
+.brand { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; line-height: 1; }
+.brand__mono {
+  font-family: var(--d); font-weight: 800; font-size: 21px;
+  letter-spacing: -.045em; color: var(--ink); will-change: transform;
+}
+.brand__mono em { font-style: normal; color: var(--accent); margin: 0 .5px; }
+.brand__full {
+  font-family: var(--d); font-weight: 500; font-size: 8.5px;
+  letter-spacing: .26em; text-transform: uppercase; color: var(--dim);
+}
+.brand__mark, .brand__type { display: none; }
+
+/* ══ HERO — cup row (the placement that read best) ═════════════ */
+.hcup--p1 { left: -3%; top: 3%;  }
+.hcup--p2 { left: 18%; top: -4%; }
+.hcup--p3 { left: 44%; top: 14%; }
+.hcup--p4 { left: 69%; top: 14%; }
+.hcup--p1 img, .hcup--p3 img, .hcup--p4 img { transform: none; }
+
+@media (max-width: 900px) {
+  .hcup--p1 { left: -8%; top: 6%; }
+  .hcup--p2 { left: 18%; top: 2%; }
+  .hcup--p3 { left: 4%;  top: 34%; }
+  .hcup--p4 { left: 52%; top: 34%; }
+  .brand__full { display: none; }
+}
+
+/* ══ LOADER v6 — a pane of frosted glass over the page ════════════
+   The site is already mounted underneath, so this is literally opaque
+   glass sitting on top of it. At the end the glass just clears. */
+.loader { background: none; }
+.loader__glass {
+  position: absolute; inset: 0; z-index: 0;
+  background: color-mix(in srgb, var(--bg) 88%, #fff);
+  backdrop-filter: blur(42px) saturate(1.1);
+  -webkit-backdrop-filter: blur(42px) saturate(1.1);
+  will-change: opacity, backdrop-filter;
+}
+.loader::before { content: none; }          /* vignette removed */
+.loader__bg, .loader__pour, .loader__particles { display: none; }
+.loader__inner { z-index: 2; }
+.loader__meta { z-index: 3; color: var(--dim); }
+.loader__count i { color: var(--ink); }
+.loader__word { color: var(--dim); }
+.loader__rule { background: color-mix(in srgb, var(--ink) 16%, transparent); }
+.loader__rule i { background: var(--ink); }
+
+/* ══ LOADER v7 — actual frosted glass, not a tinted panel ═════════
+   v6 filled the pane with near-opaque cream, so it read as a background
+   COLOUR. Real frosted glass is mostly transparent and does its work with
+   backdrop-filter: you see the page behind it, blurred. The hero entrance
+   now runs BEHIND the glass, so the cups are already drifting into place
+   while it is still frosted, and clearing it simply brings them into focus
+   — like a screen sharpening rather than a curtain lifting. */
+.loader__glass {
+  background: color-mix(in srgb, var(--bg) 26%, transparent);
+  backdrop-filter: blur(54px) saturate(1.12) brightness(1.03);
+  -webkit-backdrop-filter: blur(54px) saturate(1.12) brightness(1.03);
+}
+
+/* the loader pane is a plain frosted surface again — nothing animates
+   behind it, so it does not need to be see-through */
+.loader__glass {
+  background: color-mix(in srgb, var(--bg) 92%, #fff);
+  backdrop-filter: blur(30px) saturate(1.05);
+  -webkit-backdrop-filter: blur(30px) saturate(1.05);
+}
+
+/* ══ LEAD CUP GEOMETRY FIX ════════════════════════════════════════
+   The frames are 520x838 (aspect 0.621) but the canvas was declared
+   520/724 (0.718). The cup was being fitted into a box the wrong shape,
+   which is why it rendered oversized and clipped at the top.
+
+   Sizing maths, so this stays correct if the frames change:
+     side cup  20vw wide  -> cup is 20 x (1100/548) = 40.1vw tall
+     the cup fills 99% of the frame height, so the canvas must be
+     40.1 / (838/520) = 24.9vw wide to render an identical cup.       */
+.hcup__canvas { aspect-ratio: 520 / 838; }
+.hcup--lead   { width: 25vw; }
+.hcup--p2     { left: 18%; top: 8%; }     /* was -4% — that clipped the top */
+
+.cupslot, .scup {
+  width: 30vw; aspect-ratio: 520 / 838;
+  margin-left: -15vw; margin-top: calc(-15vw * 838 / 520);
+}
+
+@media (max-width: 900px) {
+  .hcup--lead { width: 50vw; }
+  .hcup--p2   { left: 16%; top: 6%; }
+  .cupslot, .scup {
+    width: 56vw; margin-left: -28vw; margin-top: calc(-28vw * 838 / 520);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   v8 — CUP GEOMETRY, EXACT TRIMS, AND THE RESPONSIVE PASS
+   ══════════════════════════════════════════════════════════════════════
+   Everything above sized cups by WIDTH in vw, which made "make this one
+   25px shorter" impossible to express: the height was a derived number
+   nobody could see. From here every cup is sized by HEIGHT, and the width
+   falls out of the photograph's aspect ratio (all the cup stills are
+   ~539 x 1100, i.e. 0.49). So a trim is now literally a subtraction.
+
+       --cupH   the height a hero cup would be with no trim
+       --t1..t4 the per-cup trim, in real pixels
+       --slotH  the height of a cup once it is in the story half
+
+   All the cups are STILL PHOTOGRAPHS now — the frame sequences are gone
+   from this section, so nothing inside a cup moves on scroll.            */
+
+:root {
+  --cupAR: 0.49;                        /* still width / still height */
+  --cupH:  min(40.2vw, 78svh);          /* untrimmed hero cup height   */
+  --t1: 25px;   /* green  — matcha */
+  --t2: 60px;   /* brown  — latte, the lead cup: shortest of the four */
+  --t3: 25px;   /* yellow — blood orange */
+  --t4: 45px;   /* pink   — strawberry rose */
+  --slotH: calc(min(46vw, 62svh) - 50px);   /* story-half cup height */
+}
+
+/* ── hero row ───────────────────────────────────────────────────── */
+.hrow .hcup {
+  width: auto;
+  aspect-ratio: var(--cupAR);
+  height: var(--hh);
+}
+.hrow .hcup > img,
+.hrow .hcup__inner > img {
+  width: 100%; height: 100%; object-fit: contain; display: block;
+}
+.hcup__inner { width: 100%; height: 100%; display: block; will-change: transform; }
+
+.hcup--p1 { --hh: calc(var(--cupH) - var(--t1)); }
+.hcup--p2 { --hh: calc(var(--cupH) - var(--t2)); }
+.hcup--p3 { --hh: calc(var(--cupH) - var(--t3)); }
+.hcup--p4 { --hh: calc(var(--cupH) - var(--t4)); }
+
+/* placement — pink pushed further right, as asked */
+.hcup--p1 { left: -3%;  top: 4%;  right: auto; z-index: 2; }
+.hcup--p2 { left: 19%;  top: 10%; right: auto; z-index: 5; }
+.hcup--p3 { left: 43%;  top: 14%; right: auto; z-index: 4; }
+.hcup--p4 { left: 74%;  top: 14%; right: auto; z-index: 3; }
+
+/* ── story half: the centred cup slot ───────────────────────────── */
+.cupslot, .scup {
+  position: absolute; left: 50%; top: 50%;
+  width: auto; aspect-ratio: var(--cupAR); height: var(--slotH);
+  margin-left: calc(var(--slotH) * var(--cupAR) / -2);
+  margin-top:  calc(var(--slotH) / -2);
+  pointer-events: none;
+}
+.scup > img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.scup { z-index: 6; opacity: 0; will-change: transform, opacity;
+        filter: drop-shadow(0 30px 32px rgba(74,27,3,.28)); }
+.cupslot { visibility: hidden; }
+
+/* the flyer is moved by transform only — never by width/height */
+.cupflyer { will-change: transform, opacity; }
+
+/* ══ TABLET LANDSCAPE / SMALL LAPTOP ═════════════════════════════ */
+@media (max-width: 1200px) {
+  :root { --cupH: min(42vw, 58svh); --slotH: calc(min(50vw, 56svh) - 40px); }
+  .hcup--p1 { left: -5%; top: 5%;  }
+  .hcup--p2 { left: 18%; top: 11%; }
+  .hcup--p3 { left: 43%; top: 15%; }
+  .hcup--p4 { left: 73%; top: 15%; }
+  .hcopy { max-width: 48vw; }
+  .story__big { right: 34%; }
+  .callouts { width: min(280px, 30vw); }
+}
+
+/* ══ TABLET PORTRAIT ═════════════════════════════════════════════ */
+@media (max-width: 1024px) and (orientation: portrait) {
+  :root { --cupH: min(58vw, 40svh); --slotH: min(62vw, 42svh); }
+  .hcup--p1 { left: -4%; top: 6%;  }
+  .hcup--p2 { left: 30%; top: 4%;  }
+  .hcup--p3 { left: 6%;  top: 30%; }
+  .hcup--p4 { left: 48%; top: 32%; }
+  .hcopy { max-width: 84vw; bottom: 10vh; }
+  .hstats { top: auto; bottom: 3vh; left: var(--gut); right: var(--gut);
+            justify-content: space-between; }
+}
+
+/* ══ ≤ 900 : PHONES AND NARROW TABLETS ═══════════════════════════ */
+@media (max-width: 900px) {
+  :root {
+    --cupH: min(66vw, 34svh);
+    --t1: 14px; --t2: 32px; --t3: 14px; --t4: 24px;
+    --slotH: min(80vw, 38svh);
+  }
+
+  /* hero: two rows of two, copy underneath, stats on the floor */
+  .hcup--p1 { left: -4%; top: 3%;  }
+  .hcup--p2 { left: 32%; top: 1%;  }
+  .hcup--p3 { left: 4%;  top: 25%; }
+  .hcup--p4 { left: 50%; top: 26%; }
+  .hcopy { left: var(--gut); right: var(--gut); max-width: none; bottom: 11vh; }
+  .hero__h1 { font-size: clamp(30px, 8.6vw, 46px); }
+  .hseal { width: 34px; height: 34px; margin-bottom: 10px; }
+  .hstats { top: auto; bottom: 3.5vh; left: var(--gut); right: var(--gut);
+            justify-content: space-between; gap: 10px; text-align: left; }
+  .hstats b { font-size: 16px; }
+
+  /* story half: type on top, cup in the middle, callouts on the floor.
+     Nothing overlaps — the three bands are laid out, not stacked. */
+  .half--story .story__head { top: 74px; }
+  .half--story .story__big {
+    top: 11svh; transform: none; left: var(--gut); right: var(--gut);
+    font-size: clamp(19px, 5.8vw, 34px);
+  }
+  .cupslot, .scup { top: 46%; }
+  .callouts {
+    position: absolute; left: var(--gut); right: var(--gut); width: auto;
+    bottom: 5.5svh; display: flex; flex-direction: column; gap: 11px;
+  }
+  .callout { padding-left: 30px; }
+  .callout h4 { font-size: 14px; margin-bottom: 2px; }
+  .callout p { font-size: 11.5px; line-height: 1.45; }
+  .caps { display: none; }
+
+  /* board: native swipe, cards sized so two thumbs can reach them */
+  .menu__pin { height: auto; padding: 12vh 0 10vh; }
+  .menu__track { overflow-x: auto; scroll-snap-type: x mandatory;
+                 -webkit-overflow-scrolling: touch; }
+  .mcard { width: 70vw; scroll-snap-align: center; flex: 0 0 auto; }
+  .mcard__img { min-height: clamp(230px, 62vw, 340px); }
+}
+
+/* ══ ≤ 600 : SMALL PHONES ════════════════════════════════════════ */
+@media (max-width: 600px) {
+  :root {
+    --cupH: min(64vw, 30svh);
+    --t1: 12px; --t2: 26px; --t3: 12px; --t4: 20px;
+    --slotH: min(78vw, 34svh);
+  }
+  .hcup--p1 { left: -6%; top: 3%;  }
+  .hcup--p2 { left: 34%; top: 2%;  }
+  .hcup--p3 { left: 2%;  top: 22%; }
+  .hcup--p4 { left: 52%; top: 23%; }
+  .hcopy { bottom: 13vh; }
+  .half--story .story__big { top: 10svh; font-size: clamp(17px, 6.2vw, 26px); }
+  .cupslot, .scup { top: 44%; }
+  .callouts { bottom: 4svh; gap: 9px; }
+  .callout p { font-size: 11px; }
+  .mcard { width: 78vw; }
+}
+
+/* ══ SHORT / LANDSCAPE PHONES ════════════════════════════════════
+   A 390x730 phone turned sideways has ~360px of height to work with.
+   Cups get out of the way rather than squashing the copy.            */
+@media (max-height: 560px) and (orientation: landscape) {
+  :root { --cupH: min(26vw, 62svh); --slotH: min(26vw, 66svh);
+          --t1: 8px; --t2: 18px; --t3: 8px; --t4: 14px; }
+  .hcup--p1 { left: -2%; top: 6%;  }
+  .hcup--p2 { left: 20%; top: 10%; }
+  .hcup--p3 { left: 44%; top: 14%; }
+  .hcup--p4 { left: 76%; top: 14%; }
+  .hcopy { max-width: 46vw; bottom: 6vh; }
+  .hero__h1 { font-size: clamp(22px, 4.4vw, 34px); }
+  .hstats { top: 10vh; bottom: auto; left: auto; right: var(--gut); }
+  .half--story .story__big { top: 50%; transform: translateY(-50%);
+                             right: 34%; font-size: clamp(16px, 3.4vw, 28px); }
+  .callouts { position: absolute; left: auto; right: var(--gut);
+              width: min(240px, 30vw); bottom: 6vh; }
+}
+
+/* ══ v8.1 — PHONE NAV, AND THE LAST OVERLAPS ═════════════════════ */
+
+/* the burger exists in the markup now; make the panel legible */
+.burger { background: none; border: 0; cursor: pointer; }
+.burger span { transition: transform .3s ease, opacity .2s ease; }
+.header.is-open .burger span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.header.is-open .burger span:nth-child(2) { opacity: 0; }
+.header.is-open .burger span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+@media (max-width: 760px) {
+  .header.is-open .nav {
+    display: flex; position: absolute; inset: 100% 0 auto; flex-direction: column;
+    gap: 20px; padding: 22px var(--gut) 26px; z-index: 5;
+    background: color-mix(in srgb, var(--bg) 97%, #fff);
+    border-bottom: 1px solid var(--hair);
+    box-shadow: 0 22px 40px -26px rgba(42,26,16,.5);
+  }
+  .header.is-open .nav__link { font-size: 13px; letter-spacing: .16em; color: var(--ink); }
+}
+
+/* story half: the 01 / 03 counter sat on top of the display type on phones */
+@media (max-width: 900px) {
+  .half--story .story__head { top: 66px; }
+  .half--story .story__big  { top: 16svh; }
+  .cupslot, .scup { top: 43%; }
+  .callouts { bottom: 7.5svh; }
+}
+@media (max-width: 600px) {
+  .half--story .story__head { top: 62px; }
+  .half--story .story__big  { top: 15svh; }
+  .cupslot, .scup { top: 42%; }
+  .callouts { bottom: 7svh; }
+}
+
+/* tablet portrait had a dead band between the cups and the headline */
+@media (max-width: 1024px) and (orientation: portrait) {
+  :root { --cupH: min(58vw, 43svh); --slotH: min(60vw, 44svh); }
+  .hcup--p1 { left: -4%; top: 5%;  }
+  .hcup--p2 { left: 31%; top: 3%;  }
+  .hcup--p3 { left: 5%;  top: 25%; }
+  .hcup--p4 { left: 49%; top: 27%; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   THE YARD — ذا يارد  ·  BRAND PASS (v9)
+   ══════════════════════════════════════════════════════════════════════
+   Cream base, sage-green accent — sampled from their own logo (#6E8B4F)
+   and their cream cups. The accent stays CONSTANT while you scroll; only
+   the wash, the display type and the deep tone shift per drink, so the
+   colour story survives without the brand colour wandering.
+
+   The cups also changed shape. The old illustrated cups were 0.49 wide
+   for their height; The Yard's real 12oz cups photograph at roughly 0.72
+   to 0.80. Every cup therefore carries its own `--ar`, straight from the
+   photograph, and the layout sizes by HEIGHT and derives width from it.  */
+
+:root {
+  --yard-green: #6E8B4F;
+  --yard-green-deep: #4A5C34;
+  --yard-cream: #F3ECDD;
+
+  /* the real cups are far wider than the old artwork, so the untrimmed
+     height comes down to keep the four-across row inside the viewport */
+  --cupH:  min(24.5vw, 46svh);
+  --slotH: min(23vw, 48svh);
+}
+body {
+  --bg: #F3ECDD; --bg-deep: #31240F; --ink: #24291C;
+  --accent: #6E8B4F; --glow: #C9A87C; --dim: #877A64; --display: #B08B5F;
+}
+
+/* every cup keeps its own photographed shape */
+.hrow .hcup { aspect-ratio: var(--ar, .78); }
+.cupslot, .scup {
+  aspect-ratio: var(--ar, .78);
+  margin-left: calc(var(--slotH) * var(--ar, .78) / -2);
+}
+.cupslot { --ar: .78; }
+
+/* ── wordmark ──────────────────────────────────────────────────────
+   Their real wordmark, extracted from the logo and used as a MASK so it
+   always paints in the current ink colour instead of fighting the wash. */
+.brand__mark {
+  display: block; width: 104px; height: 50px;
+  background: var(--ink);
+  -webkit-mask: url('stills/y-logo.webp') no-repeat center / contain;
+  mask: url('stills/y-logo.webp') no-repeat center / contain;
+  transition: background .5s ease;
+}
+.brand { flex-direction: row; align-items: center; }
+.brand__sr {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+.brand__mono, .brand__full, .brand__type { display: none; }
+.header.is-stuck .brand__mark { width: 92px; height: 44px; }
+
+/* ── app store buttons ─────────────────────────────────────────── */
+.storebtn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 9px 16px 9px 13px; border-radius: 9px;
+  border: 1px solid color-mix(in srgb, currentColor 34%, transparent);
+  color: inherit; line-height: 1.05; white-space: nowrap;
+  transition: background .3s ease, border-color .3s ease, transform .3s ease;
+}
+.storebtn:hover {
+  background: color-mix(in srgb, currentColor 9%, transparent);
+  border-color: color-mix(in srgb, currentColor 60%, transparent);
+  transform: translateY(-2px);
+}
+.storebtn svg { width: 21px; height: 21px; flex: none; }
+.storebtn span { display: flex; flex-direction: column; font-family: var(--d); font-weight: 600; font-size: 14px; letter-spacing: -.01em; }
+.storebtn em { font-style: normal; font-size: 8.5px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; opacity: .62; margin-bottom: 2px; }
+.storerow { display: flex; gap: 10px; flex-wrap: wrap; }
+.footer__stores { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 34px; }
+
+/* ── order sheet (was the add-to-cart panel) ───────────────────── */
+.cmodal__note { font-size: 12.5px; line-height: 1.6; color: var(--dim); max-width: 44ch; }
+.cmodal__link { display: inline-block; margin-top: 16px; font-size: 12px; letter-spacing: .04em; color: var(--accent); }
+.cmodal__link:hover { text-decoration: underline; }
+.cmodal__row { margin-top: 18px; }
+
+/* ── board: category instead of a price we cannot verify ───────── */
+.mcard__cat {
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--dim); white-space: nowrap;
+}
+.mcard__img { aspect-ratio: auto; }
+.menu__note { font-size: 11.5px; letter-spacing: .04em; color: var(--dim); margin-top: 8px; }
+
+/* ── visit ─────────────────────────────────────────────────────── */
+.visit__ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 40px; }
+.visit__ctas .cta--lg { margin-top: 0; }
+.cta--ghost { border-color: color-mix(in srgb, currentColor 42%, transparent); }
+.visit__info a { color: inherit; text-decoration: none; border-bottom: 1px solid color-mix(in srgb, currentColor 30%, transparent); }
+
+/* ══ REVIEW CARDS — the overlap fix ═══════════════════════════════
+   The shelves used a hard `translateY(42px)` on every other card plus a
+   negative margin on the second shelf. With The Yard's longer quotes the
+   cards grow taller, the two shelves ran into each other and the text
+   collided. Cards are now a fixed height with the quote clamped, the
+   stagger is a margin (which reserves space) rather than a transform
+   (which does not), and the shelves get real breathing room.            */
+.qcard {
+  width: clamp(260px, 24vw, 340px);
+  min-height: 200px; height: auto;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 24px 24px 20px;
+  background: color-mix(in srgb, var(--bg) 82%, #fff);
+  border: 1px solid var(--hair); border-radius: 3px;
+  transform: none !important;          /* the JS stagger is now a margin */
+}
+.qcard p {
+  font-size: 13.5px; line-height: 1.62; color: var(--ink);
+  display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.qcard footer { margin-top: 18px; display: flex; flex-direction: column; gap: 3px; }
+.qcard footer em { font-style: normal; font-family: var(--d); font-weight: 600; font-size: 13px; }
+.qcard footer span { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.qcard--low { margin-top: 46px; }
+.shelves { display: flex; flex-direction: column; gap: 30px; }
+.shelf { align-items: flex-start; padding-bottom: 8px; }
+
+@media (max-width: 900px) {
+  .qcard { width: 74vw; min-height: 0; padding: 20px; }
+  .qcard p { font-size: 13px; -webkit-line-clamp: 6; }
+  .qcard--low { margin-top: 22px; }
+  .brand__mark { width: 84px; height: 40px; }
+  .footer__stores, .storerow { gap: 8px; }
+  .storebtn { padding: 8px 13px 8px 11px; }
+  .storebtn span { font-size: 13px; }
+  .visit__ctas { gap: 10px; }
+}
+
+/* ── hero / story sizing for the real cup shape ───────────────── */
+@media (max-width: 1200px) {
+  :root { --cupH: min(26vw, 42svh); --slotH: min(26vw, 44svh); }
+}
+@media (max-width: 1024px) and (orientation: portrait) {
+  :root { --cupH: min(38vw, 30svh); --slotH: min(42vw, 34svh); }
+  .hcup--p1 { left: -3%; top: 5%;  }
+  .hcup--p2 { left: 33%; top: 3%;  }
+  .hcup--p3 { left: 4%;  top: 26%; }
+  .hcup--p4 { left: 46%; top: 27%; }
+}
+@media (max-width: 900px) {
+  :root {
+    --cupH: min(44vw, 25svh);
+    --t1: 12px; --t2: 26px; --t3: 12px; --t4: 20px;
+    --slotH: min(52vw, 30svh);
+  }
+  .hcup--p1 { left: -4%; top: 4%;  }
+  .hcup--p2 { left: 40%; top: 2%;  }
+  .hcup--p3 { left: 2%;  top: 22%; }
+  .hcup--p4 { left: 46%; top: 23%; }
+}
+@media (max-width: 600px) {
+  :root {
+    --cupH: min(46vw, 23svh);
+    --t1: 10px; --t2: 22px; --t3: 10px; --t4: 16px;
+    --slotH: min(56vw, 28svh);
+  }
+  .hcup--p1 { left: -5%; top: 4%;  }
+  .hcup--p2 { left: 42%; top: 2%;  }
+  .hcup--p3 { left: 0%;  top: 21%; }
+  .hcup--p4 { left: 46%; top: 22%; }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  :root { --cupH: min(17vw, 58svh); --slotH: min(17vw, 60svh); }
+}
+
+/* the shop photo moved to their own storefront */
+.visit__pin { background-image: url('stills/y-shop.webp'); }
+
+/* ══ v9.1 — HERO COMPOSITION FOR THE REAL CUPS ═══════════════════
+   The Yard's cups are ~0.78 wide for their height where the old artwork
+   was 0.49, so at the same height they eat far more of the row. First
+   pass sized them to fit and left a dead band under them; this puts the
+   height back up, drops the row clear of the header, and moves the stats
+   off the acai cup and down beside the button.                          */
+:root { --cupH: min(30vw, 54svh); --slotH: min(25vw, 50svh); }
+
+.hcup--p1 { left: -4%; top: 9%;  }
+.hcup--p2 { left: 19%; top: 13%; }
+.hcup--p3 { left: 44%; top: 24%; }
+.hcup--p4 { left: 70%; top: 24%; }
+
+.hstats {
+  top: auto; bottom: 8vh; right: var(--gut); left: auto;
+  gap: clamp(22px, 3.2vw, 52px); text-align: left;
+}
+.hstats b { font-size: clamp(18px, 1.8vw, 26px); }
+.hcopy { bottom: 8vh; max-width: 40vw; }
+
+/* the generic coffee-bean cutouts were leftovers from the old brand and
+   read as brown blobs next to The Yard's photography */
+.caps { display: none; }
+
+@media (max-width: 1200px) {
+  :root { --cupH: min(32vw, 48svh); --slotH: min(28vw, 46svh); }
+  .hcup--p1 { left: -6%; top: 10%; }
+  .hcup--p2 { left: 18%; top: 14%; }
+  .hcup--p3 { left: 43%; top: 25%; }
+  .hcup--p4 { left: 70%; top: 25%; }
+}
+@media (max-width: 1024px) and (orientation: portrait) {
+  :root { --cupH: min(40vw, 30svh); --slotH: min(44vw, 34svh); }
+  .hcup--p1 { left: -3%; top: 7%;  }
+  .hcup--p2 { left: 34%; top: 5%;  }
+  .hcup--p3 { left: 3%;  top: 26%; }
+  .hcup--p4 { left: 45%; top: 27%; }
+  .hstats { bottom: 3.5vh; left: var(--gut); right: var(--gut);
+            justify-content: space-between; }
+  .hcopy { max-width: 84vw; bottom: 11vh; }
+}
+@media (max-width: 900px) {
+  :root { --cupH: min(46vw, 26svh); --slotH: min(54vw, 31svh); }
+  .hcup--p1 { left: -5%; top: 5%;  }
+  .hcup--p2 { left: 41%; top: 3%;  }
+  .hcup--p3 { left: 1%;  top: 22%; }
+  .hcup--p4 { left: 46%; top: 23%; }
+  .hstats { bottom: 3.5vh; left: var(--gut); right: var(--gut);
+            justify-content: space-between; gap: 10px; }
+  .hcopy { bottom: 11vh; max-width: none; left: var(--gut); right: var(--gut); }
+}
+@media (max-width: 600px) {
+  :root { --cupH: min(48vw, 24svh); --slotH: min(58vw, 29svh); }
+  .hcup--p1 { left: -6%; top: 5%;  }
+  .hcup--p2 { left: 43%; top: 3%;  }
+  .hcup--p3 { left: -1%; top: 21%; }
+  .hcup--p4 { left: 45%; top: 22%; }
+  .hcopy { bottom: 12vh; }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  :root { --cupH: min(20vw, 62svh); --slotH: min(19vw, 64svh); }
+  .hstats { bottom: auto; top: 12vh; right: var(--gut); left: auto; }
+  .hcopy { max-width: 44vw; bottom: 6vh; }
+}
+
+/* ══ v9.2 — LAST LAYOUT PASS ═════════════════════════════════════ */
+
+/* board: the note belongs under the title, not hanging off its baseline,
+   and the index numerals were sitting behind the cups */
+.menu__head { display: block; }
+.menu__title { display: block; }
+.menu__note { display: block; margin-top: 10px; }
+.mcard__img { padding-top: 30px; }
+.mcard__idx { top: 2px; left: 0; z-index: 3; }
+.menu__pin { justify-content: center; padding-top: 0; }
+
+/* footer: descenders were being clipped by the reveal mask */
+.fw { padding-bottom: .1em; margin-bottom: -.1em; }
+
+/* hero on phones: the cups were floating in the top third with a dead
+   band beneath them, and the first cup ran under the wordmark */
+@media (max-width: 900px) {
+  :root { --cupH: min(58vw, 33svh); --slotH: min(62vw, 34svh); }
+  .hcup--p1 { left: -5%; top: 8%;  }
+  .hcup--p2 { left: 44%; top: 6%;  }
+  .hcup--p3 { left: -2%; top: 27%; }
+  .hcup--p4 { left: 43%; top: 28%; }
+  .hcopy { bottom: 12vh; }
+  .menu__note { font-size: 11px; }
+  .mcard__img { padding-top: 24px; }
+}
+@media (max-width: 600px) {
+  :root { --cupH: min(60vw, 31svh); --slotH: min(64vw, 32svh); }
+  .hcup--p1 { left: -6%; top: 8%;  }
+  .hcup--p2 { left: 45%; top: 6%;  }
+  .hcup--p3 { left: -3%; top: 27%; }
+  .hcup--p4 { left: 43%; top: 28%; }
+}
+
+/* ══ v9.3 — REVIEWS FIT, FOOTER BUTTONS READABLE ═════════════════ */
+
+/* the second shelf was falling off the bottom of the viewport */
+.community { padding: 12vh 0; }
+.community__head { margin-bottom: 5vh; }
+.community__title { font-size: clamp(36px, 5.6vw, 96px); }
+.qcard { min-height: 178px; padding: 20px 22px 18px; }
+.qcard--low { margin-top: 32px; }
+.shelves { gap: 22px; }
+
+/* the footer sits on the deep tone, so the store buttons have to be cream —
+   currentColor was resolving to the dim body colour and vanishing */
+.footer__stores { margin-top: 30px; }
+.footer__stores .storebtn { color: color-mix(in srgb, var(--bg) 94%, #fff); }
+.footer__stores .storebtn:hover { background: color-mix(in srgb, var(--bg) 12%, transparent); }
+
+@media (max-width: 900px) {
+  .community { padding: 9vh 0; }
+  .community__head { margin-bottom: 4vh; }
+  .qcard { min-height: 0; }
+  .qcard--low { margin-top: 18px; }
+}
+
+/* ══ v9.4 — LANDING ALIGNED TO THE PIXEL ═════════════════════════
+   The card painted its cup inside `padding: 10px 0 0` on the <img> itself.
+   drawnBox() in Menu.jsx measures the SLOT's padding, not the image's, so
+   the flyer finished 5px high and 8px large and the swap showed a tiny hop.
+   All the breathing room now lives on the slot, where it can be measured. */
+.mcard__img img { padding: 0; }
+.mcard__img { padding: 34px 0 0; }
+@media (max-width: 900px) { .mcard__img { padding: 26px 0 0; } }
+
+/* ══════════════════════════════════════════════════════════════════════
+   v10 — THE FULL MENU
+   ══════════════════════════════════════════════════════════════════════
+   Their whole board: 9 categories, 73 items, behind a category bar built
+   the same way theirs is. Cards are deliberately compact — this is a menu
+   you scan, not a gallery you scroll. The pinned featured strip above it
+   keeps its cards but they come down in height too.                      */
+
+/* the featured strip: shorter cards */
+.mcard { width: clamp(200px, 17vw, 260px); }
+.mcard__img { min-height: 0; height: clamp(190px, 21vw, 280px); padding: 22px 0 0; }
+.mcard__foot { padding-top: 10px; }
+.mcard__name { font-size: 16px; }
+.menu__pin { height: auto; min-height: 100svh; padding: 12vh 0 6vh; }
+
+.fullmenu {
+  position: relative; z-index: 2;
+  padding: 8vh 0 12vh; background: var(--bg);
+}
+.fullmenu__head { padding: 0 var(--gut); margin-bottom: 26px; }
+.fullmenu__title {
+  font-family: var(--d); font-weight: 700; letter-spacing: -.035em;
+  font-size: clamp(28px, 3.6vw, 54px); line-height: 1;
+}
+.fullmenu__sub { margin-top: 8px; font-size: 12.5px; color: var(--dim); letter-spacing: .01em; }
+
+/* ── the category bar ── sticks under the header while you scan ── */
+.catbar {
+  position: sticky; top: 62px; z-index: 12;
+  padding: 12px 0; margin-bottom: 8px;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(12px) saturate(1.05);
+  -webkit-backdrop-filter: blur(12px) saturate(1.05);
+  border-bottom: 1px solid var(--hair);
+}
+.catbar__inner {
+  display: flex; gap: 8px; padding: 0 var(--gut);
+  overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.catbar__inner::-webkit-scrollbar { display: none; }
+.catchip {
+  display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto;
+  padding: 8px 14px; border-radius: 100px; cursor: pointer;
+  border: 1px solid var(--hair); background: none; color: var(--ink);
+  font-family: var(--d); font-weight: 600; font-size: 12.5px; letter-spacing: -.005em;
+  white-space: nowrap;
+  transition: background .25s ease, border-color .25s ease, color .25s ease;
+}
+.catchip em {
+  font-style: normal; font-size: 10px; font-weight: 600; opacity: .5;
+  font-variant-numeric: tabular-nums;
+}
+.catchip:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.catchip.is-on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.catchip.is-on em { opacity: .75; }
+
+/* ── grouped grid ── */
+.mgroup { padding: 0 var(--gut); margin-top: 40px; }
+.mgroup__title {
+  display: flex; align-items: baseline; gap: 12px;
+  font-family: var(--d); font-weight: 700; font-size: 15px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--ink);
+  padding-bottom: 12px; margin-bottom: 20px;
+  border-bottom: 1px solid var(--hair);
+}
+.mgroup__title i {
+  font-style: normal; font-size: 11px; letter-spacing: .06em;
+  color: var(--accent); font-variant-numeric: tabular-nums;
+}
+.mgrid {
+  display: grid; gap: clamp(12px, 1.4vw, 22px);
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+}
+
+.mitem { cursor: pointer; display: flex; flex-direction: column; }
+.mitem__img {
+  position: relative; height: clamp(126px, 11vw, 164px);
+  display: grid; place-items: center; overflow: hidden;
+  border-radius: 3px; padding: 12px 8px;
+  background: color-mix(in srgb, var(--glow) 12%, #fff);
+  transition: background .35s ease;
+}
+.mitem__img img {
+  max-width: 100%; max-height: 100%; width: auto; height: auto;
+  object-fit: contain; display: block;
+  transition: transform .5s cubic-bezier(.22,.61,.36,1);
+}
+.mitem:hover .mitem__img { background: color-mix(in srgb, var(--glow) 22%, #fff); }
+.mitem:hover .mitem__img img { transform: scale(1.07); }
+.mitem__mark {
+  width: 62%; height: 44%; opacity: .32; background: var(--accent);
+  -webkit-mask: url('stills/y-logo.webp') no-repeat center / contain;
+  mask: url('stills/y-logo.webp') no-repeat center / contain;
+}
+.mitem__body { padding: 10px 2px 0; display: flex; flex-direction: column; gap: 3px; }
+.mitem__name {
+  font-family: var(--d); font-weight: 600; font-size: 13.5px;
+  line-height: 1.25; letter-spacing: -.01em; color: var(--ink);
+}
+.mitem__desc {
+  font-size: 11px; line-height: 1.45; color: var(--dim);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.fullmenu__cta {
+  display: inline-block; margin: 46px var(--gut) 0;
+  font-family: var(--d); font-weight: 600; font-size: 14px; color: var(--accent);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  padding-bottom: 3px;
+}
+.fullmenu__cta:hover { border-bottom-color: var(--accent); }
+
+.cmodal__mark {
+  display: block; width: 74%; height: 46%; opacity: .5; background: var(--accent);
+  -webkit-mask: url('stills/y-logo.webp') no-repeat center / contain;
+  mask: url('stills/y-logo.webp') no-repeat center / contain;
+}
+
+@media (max-width: 900px) {
+  .mcard { width: 58vw; }
+  .mcard__img { height: clamp(180px, 46vw, 250px); padding: 18px 0 0; }
+  .menu__pin { padding: 10vh 0 5vh; min-height: 0; }
+  .fullmenu { padding: 6vh 0 9vh; }
+  .catbar { top: 56px; padding: 10px 0; }
+  .catchip { font-size: 11.5px; padding: 7px 12px; }
+  .mgrid { grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 12px; }
+  .mitem__img { height: 118px; }
+  .mitem__name { font-size: 12.5px; }
+  .mgroup { margin-top: 30px; }
+}
+@media (max-width: 600px) {
+  .mgrid { grid-template-columns: repeat(2, 1fr); }
+  .mitem__img { height: 124px; }
+}
+
+/* ══ v10.1 — MENU TILE OVERFLOW ══════════════════════════════════
+   `.mitem__img` was a grid with `place-items: center` and the image capped
+   by `max-height: 100%`. In a grid the row track is auto-sized to the
+   content, so the percentage resolved against the IMAGE's height (357px on
+   the banana pudding) rather than the tile's 164px — every tall item spilled
+   out of the bottom of its tile and got clipped. Sizing the image to the box
+   and letting object-fit letterbox it removes the percentage entirely.     */
+.mitem__img { display: block; position: relative; }
+.mitem__img img {
+  width: 100%; height: 100%; max-width: none; max-height: none;
+  object-fit: contain; display: block;
+}
+.mitem__mark {
+  position: absolute; inset: 14% 18%; width: auto; height: auto;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   v11 — SECTION 3 IS THE WHOLE MENU
+   ══════════════════════════════════════════════════════════════════════
+   One pinned stage: headline + category bar fixed at the top, and the
+   entire board — 9 categories, 73 items — laid out as one continuous
+   horizontal shelf that vertical scrolling pans through. Two rows per
+   category so 73 cards do not cost seven screens of wheel.
+
+   The separate "full menu" block below the board is gone; this replaces
+   both of them.                                                          */
+
+.menu { position: relative; }
+.menu__pin {
+  height: 100svh; min-height: 620px;
+  display: flex; flex-direction: column;
+  justify-content: flex-start; align-items: stretch;
+  padding: 13svh 0 5svh; overflow: hidden; background: var(--bg);
+}
+
+.menu__head { padding: 0 var(--gut); margin: 0 0 22px; display: block; }
+.menu__headline { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; }
+.menu__title {
+  font-family: var(--d); font-weight: 700; letter-spacing: -.04em;
+  font-size: clamp(30px, 4.4vw, 68px); line-height: .95; margin: 0;
+}
+.menu__title em { font-style: italic; color: var(--accent); }
+.menu__note { margin: 0; font-size: 12px; color: var(--dim); letter-spacing: .01em; }
+
+/* ── the category bar ── a live index, and a jump control ── */
+.catbar { margin-top: 18px; }
+.catbar__inner {
+  display: flex; gap: 8px;
+  overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+.catbar__inner::-webkit-scrollbar { display: none; }
+.catchip {
+  display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto;
+  padding: 8px 15px; border-radius: 100px; cursor: pointer;
+  border: 1px solid var(--hair); background: none; color: var(--ink);
+  font-family: var(--d); font-weight: 600; font-size: 12.5px;
+  white-space: nowrap;
+  transition: background .3s ease, border-color .3s ease, color .3s ease;
+}
+.catchip em {
+  font-style: normal; font-size: 10px; font-weight: 600; opacity: .5;
+  font-variant-numeric: tabular-nums;
+}
+.catchip:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.catchip.is-on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.catchip.is-on em { opacity: .78; }
+
+/* ── the shelf ── */
+.menu__track {
+  display: flex; align-items: stretch; gap: clamp(34px, 4vw, 74px);
+  padding: 0 var(--gut); flex: 1 1 auto; min-height: 0;
+  will-change: transform;
+}
+.mgroup { display: flex; flex-direction: column; flex: 0 0 auto; min-height: 0; }
+.mgroup__title {
+  display: flex; align-items: baseline; gap: 10px; flex: none;
+  font-family: var(--d); font-weight: 700; font-size: 12.5px;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--ink);
+  padding-bottom: 10px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--hair);
+}
+.mgroup__title i {
+  font-style: normal; font-size: 10.5px; letter-spacing: .06em;
+  color: var(--accent); font-variant-numeric: tabular-nums;
+}
+
+/* two rows, flowing column by column, so the track stays a sane length */
+.mshelf {
+  display: grid; grid-auto-flow: column;
+  grid-template-rows: repeat(2, 1fr);
+  gap: clamp(14px, 1.5vw, 26px);
+  flex: 1 1 auto; min-height: 0;
+}
+
+.mcard {
+  width: clamp(140px, 12vw, 186px);
+  display: flex; flex-direction: column; min-height: 0; cursor: pointer;
+}
+.mcard__img {
+  position: relative; flex: 1 1 auto; min-height: 0;
+  display: block; overflow: hidden; border-radius: 3px;
+  padding: 12px 10px 6px; border: 0;
+  background: color-mix(in srgb, var(--glow) 12%, #fff);
+  transition: background .35s ease;
+}
+.mcard:hover .mcard__img { background: color-mix(in srgb, var(--glow) 22%, #fff); }
+.mcard__img img {
+  width: 100%; height: 100%; max-width: none; max-height: none;
+  object-fit: contain; display: block; padding: 0; will-change: transform;
+}
+.mcard__mark {
+  position: absolute; inset: 20% 18%; opacity: .3; background: var(--accent);
+  -webkit-mask: url('stills/y-logo.webp') no-repeat center / contain;
+  mask: url('stills/y-logo.webp') no-repeat center / contain;
+}
+.mcard__over {
+  position: absolute; inset: auto 0 0; transform: translateY(101%);
+  padding: 12px 12px 14px; background: color-mix(in srgb, var(--bg) 95%, #fff);
+  border-top: 1px solid var(--hair);
+}
+.mcard__over p {
+  font-size: 10.5px; line-height: 1.45; color: var(--dim);
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+.mcard__foot {
+  flex: none; padding-top: 9px; border-top: 0; display: block;
+}
+.mcard__name {
+  font-family: var(--d); font-weight: 600; font-size: 12.5px;
+  line-height: 1.25; letter-spacing: -.01em; color: var(--ink);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.mcard__idx, .mcard__cat, .mcard__price { display: none; }
+
+.mgroup--end { justify-content: center; padding-right: var(--gut); }
+.menu__cta {
+  display: inline-block; font-family: var(--d); font-weight: 700;
+  font-size: clamp(18px, 1.7vw, 26px); line-height: 1.25; color: var(--accent);
+  letter-spacing: -.02em; white-space: nowrap;
+}
+.menu__cta:hover { text-decoration: underline; text-underline-offset: 6px; }
+
+/* the old separate full-menu block is retired */
+.fullmenu { display: none; }
+
+@media (max-width: 900px) {
+  .menu__pin {
+    height: auto; min-height: 0; padding: 9vh 0 8vh; overflow: visible;
+  }
+  .menu__track {
+    gap: 30px; overflow-x: auto; scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    padding-bottom: 6px;
+  }
+  .menu__track::-webkit-scrollbar { display: none; }
+  .mgroup { scroll-snap-align: start; }
+  .mshelf { gap: 12px; }
+  .mcard { width: 42vw; max-width: 190px; }
+  .mcard__img { height: 40vw; max-height: 190px; flex: none; }
+  .menu__headline { gap: 8px; }
+  .menu__note { font-size: 11.5px; }
+  .catchip { font-size: 11.5px; padding: 7px 12px; }
+  .mgroup--end { padding-right: 0; }
+  .menu__cta { white-space: normal; width: 46vw; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   v12 — HERO STAIRCASE + THE MENU FLOATS AS ONE BOARD
+   ══════════════════════════════════════════════════════════════════════
+   1) Hero cups move onto the client's hand-drawn diagonal: a descending
+      staircase from top-left to bottom-right. Nothing is cropped off the
+      left edge any more; the last cup kisses the right edge, as drawn.
+   2) The menu section's white slab is gone: the pin is transparent, the
+      sage wash of the page shows through, and the whole menu — title,
+      category bar and shelf — sits on one floating, shadowed board.   */
+
+@media (min-width: 1025px) {
+  .hcup--p1 { left: 17%;   top: 2.5%;  z-index: 2; }
+  .hcup--p2 { left: 36.5%; top: 21%;   z-index: 5; }
+  .hcup--p3 { left: 58%;   top: 28.5%; z-index: 4; }
+  .hcup--p4 { left: 85%;   top: 34%;   z-index: 3; }
+}
+@media (min-width: 1025px) and (max-width: 1300px) {
+  .hcup--p1 { left: 14%; top: 2.5%; }
+  .hcup--p2 { left: 34%; top: 21%; }
+  .hcup--p3 { left: 56%; top: 28.5%; }
+  .hcup--p4 { left: 82%; top: 34%; }
+}
+
+/* ── the floating menu board ── */
+.menu {
+  background:
+    radial-gradient(120% 95% at 50% 0%,
+      color-mix(in srgb, var(--accent) 14%, var(--bg)) 0%,
+      color-mix(in srgb, var(--accent) 6%, var(--bg)) 52%,
+      var(--bg) 100%);
+}
+.menu__pin { background: transparent; padding: 9svh var(--gut) 4.5svh; }
+.menu__board {
+  flex: 1 1 auto; min-height: 0;
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #FCF6E8 0%, #F3EAD5 100%);
+  border: 1px solid color-mix(in srgb, var(--ink) 7%, transparent);
+  border-radius: clamp(18px, 1.8vw, 28px);
+  box-shadow:
+    0 32px 74px -20px rgba(46, 54, 32, .30),
+    0 10px 26px -12px rgba(46, 54, 32, .18),
+    inset 0 1px 0 rgba(255, 255, 255, .65);
+  overflow: hidden;
+  padding: clamp(18px, 2.2vw, 30px) 0 clamp(14px, 1.8vw, 24px);
+}
+.menu__board .menu__head { padding: 0 clamp(20px, 2.4vw, 38px); }
+.menu__board .menu__track { padding: 0 clamp(20px, 2.4vw, 38px); }
+
+@media (max-width: 900px) {
+  .menu__pin { background: transparent; padding: 8vh 14px 7vh; overflow: visible; }
+  .menu__board { border-radius: 18px; padding: 16px 0 14px; }
+  .menu__board .menu__head,
+  .menu__board .menu__track { padding-left: 14px; padding-right: 14px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   v13 — MENU BACK TO THE OPEN BOARD, TILES TRANSPARENT · VISIT WALL
+   ══════════════════════════════════════════════════════════════════════
+   The floating container on section 3 was a misread: what was asked for
+   was the ORIGINAL open shelf, with the white tile behind each item removed.
+   So the board wrapper is gone from the markup, the pin is plain cream
+   again, and the cup cut-outs sit directly on the ground. Card sizes are
+   exactly what they were — only the white fill is removed.            */
+
+.menu { background: none; }
+.menu__pin { background: var(--bg); padding: 13svh 0 5svh; }
+.menu__board { all: unset; display: contents; }   /* retired wrapper */
+
+.mcard__img { background: transparent; padding: 8px 8px 12px; }
+.mcard__img img { filter: drop-shadow(0 12px 13px rgba(46, 54, 32, .17)); }
+.mcard:hover .mcard__img { background: transparent; }   /* hover tint gone too */
+.mcard__over {
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+
+@media (max-width: 900px) {
+  .menu__pin { padding: 9vh 0 8vh; }
+  .menu__board .menu__head,
+  .menu__board .menu__track { padding-left: 0; padding-right: 0; }
+}
+
+/* ── VISIT — the real sign wall, photographed by the client ─────────────
+   The photo is small (423 px), so instead of faking sharpness it leans
+   into a soft night-bokeh treatment: gentle blur, warm scrim on the left
+   where the copy sits. The title now sets on ONE line and the section no
+   longer stands a full screen tall.                                     */
+.visit__shot { min-height: 76svh; }
+.visit__bg {
+  background-position: center 42%;
+  filter: blur(1.4px) brightness(.94) saturate(1.1) contrast(1.03);
+}
+.visit__scrim {
+  background:
+    linear-gradient(100deg,
+      rgba(13, 17, 9, .72) 0%,
+      rgba(13, 17, 9, .42) 42%,
+      rgba(13, 17, 9, .12) 68%,
+      rgba(13, 17, 9, 0) 82%);
+}
+.visit__body { max-width: min(880px, 80vw); }
+.visit__title {
+  white-space: nowrap; margin: 0 0 20px;
+  font-size: clamp(30px, 5.6vw, 88px);
+  text-shadow: 0 2px 26px rgba(10, 12, 6, .65);
+}
+.visit__info { gap: 15px; }
+.visit__info div { padding-bottom: 12px; }
+.visit__info div:last-child { border-bottom: 0; padding-bottom: 0; }
+.visit__ctas { margin-top: 22px; }
+@media (max-width: 900px) {
+  .visit__shot { min-height: 68svh; }
+  .visit__body { max-width: 92vw; }
+  .visit__title { font-size: clamp(26px, 7.6vw, 44px); }
+  .visit__scrim {
+    background: linear-gradient(180deg,
+      rgba(13, 17, 9, .68) 0%,
+      rgba(13, 17, 9, .38) 58%,
+      rgba(13, 17, 9, .1) 100%);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   v14 — THE OLIVE STORE SHEET · VISIT PHOTOGRAPH SWAP
+   ══════════════════════════════════════════════════════════════════════
+   1) "Get the app" no longer guesses your device — it asks. One olive
+      panel (The Yard's own green), palm mark, two store cards.
+   2) The visit backdrop is now The Yard's real kiosk at SRTIP — sharp
+      enough to skip the blur treatment, scrim lightened to match.      */
+
+.ssheet {
+  position: fixed; inset: 0; z-index: 400; display: grid; place-items: center;
+  padding: 5vh var(--gut);
+  background: color-mix(in srgb, #141A0C 52%, transparent);
+  backdrop-filter: blur(10px) saturate(1.05);
+  -webkit-backdrop-filter: blur(10px) saturate(1.05);
+}
+.ssheet__panel {
+  position: relative; width: min(470px, 94vw); overflow: hidden;
+  background: linear-gradient(158deg, #5A7639 0%, #425F2A 46%, #2C3D1B 100%);
+  border: 1px solid rgba(243, 236, 221, .2); border-radius: 26px;
+  box-shadow:
+    0 44px 96px -20px rgba(15, 20, 9, .6),
+    0 12px 30px -12px rgba(15, 20, 9, .4),
+    inset 0 1px 0 rgba(255, 255, 255, .16);
+  color: #F3ECDD; padding: 42px 32px 26px; text-align: center;
+}
+.ssheet__halo {
+  content: ''; position: absolute; inset: -32% -12% auto; height: 80%; pointer-events: none;
+  background: radial-gradient(58% 88% at 50% 0%, rgba(243, 236, 221, .17), transparent 70%);
+}
+.ssheet__x {
+  position: absolute; top: 12px; right: 12px; width: 34px; height: 34px;
+  border-radius: 50%; border: 1px solid rgba(243, 236, 221, .32);
+  background: none; color: #F3ECDD; cursor: pointer;
+  display: grid; place-items: center; transition: background .3s ease;
+}
+.ssheet__x:hover { background: rgba(243, 236, 221, .14); }
+.ssheet__x svg { width: 15px; height: 15px; }
+.ssheet__mark {
+  display: block; width: 52px; height: 52px; margin: 0 auto 14px;
+  background: #F3ECDD; opacity: .94;
+  -webkit-mask: url('stills/y-logo.webp') no-repeat center / contain;
+  mask: url('stills/y-logo.webp') no-repeat center / contain;
+}
+.ssheet__title {
+  font-family: var(--d); font-weight: 700; letter-spacing: -.025em;
+  font-size: clamp(25px, 2.6vw, 33px); line-height: 1.05; margin: 0 0 10px;
+}
+.ssheet__sub {
+  margin: 0 auto 26px; max-width: 34ch;
+  font-size: 13px; line-height: 1.6; color: rgba(243, 236, 221, .8);
+}
+.ssheet__row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ssheet__btn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 17px 12px 14px; border-radius: 16px;
+  background: rgba(243, 236, 221, .1); border: 1px solid rgba(243, 236, 221, .28);
+  color: #F3ECDD;
+  transition: background .28s ease, color .28s ease, transform .28s ease, border-color .28s ease;
+}
+.ssheet__btn:hover {
+  background: #F3ECDD; color: #2C3D1B; border-color: #F3ECDD;
+  transform: translateY(-2px);
+}
+.ssheet__btn svg { width: 25px; height: 25px; margin-bottom: 5px; }
+.ssheet__btn span { font-family: var(--d); font-weight: 700; font-size: 14.5px; letter-spacing: -.01em; }
+.ssheet__btn em { font-style: normal; font-size: 10px; letter-spacing: .05em; opacity: .62; }
+.ssheet__foot {
+  margin: 20px 0 2px; font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: rgba(243, 236, 221, .52);
+}
+@media (max-width: 480px) {
+  .ssheet__row { grid-template-columns: 1fr; }
+  .ssheet__btn { flex-direction: row; justify-content: center; gap: 10px; padding: 14px; }
+  .ssheet__btn svg { margin-bottom: 0; width: 22px; height: 22px; }
+  .ssheet__btn em { display: none; }
+}
+
+/* ── visit: the real kiosk photo — no blur, lighter scrim ── */
+.visit__bg { filter: none; background-position: center 71%; }
+.visit__scrim {
+  background:
+    linear-gradient(100deg,
+      rgba(13, 17, 9, .68) 0%,
+      rgba(13, 17, 9, .36) 44%,
+      rgba(13, 17, 9, .08) 70%,
+      rgba(13, 17, 9, 0) 84%);
+}
+@media (max-width: 900px) {
+  .visit__bg { background-position: center 60%; }
+  .visit__scrim {
+    background: linear-gradient(180deg,
+      rgba(13, 17, 9, .62) 0%,
+      rgba(13, 17, 9, .32) 55%,
+      rgba(13, 17, 9, .14) 100%);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   v15 — PHONE + TABLET: HERO ARC, MENU PANS ON VERTICAL SCROLL
+   ══════════════════════════════════════════════════════════════════════
+   1) Hero cups on ≤1024px move to the client's hand-marked arc, smaller
+      than before: matcha top-left, flat white top-right (kisses the edge),
+      cascara and acai filling the middle below — no overlaps, nothing
+      cropped. Each slot now carries its drink's own aspect ratio, so the
+      drawn sizes translate one-to-one.
+   2) The menu pan no longer opts out on touch: phones and tablets pin the
+      section and pan horizontally as you scroll vertically, like desktop. */
+
+@media (max-width: 1024px) {
+  .hrow .hcup--p1 { left: 1.2%;  top: 16.6%; width: 31vw; height: auto; aspect-ratio: 0.78;  z-index: 2; }
+  .hrow .hcup--p2 { left: 75.2%; top: 22.6%; width: 22vw; height: auto; aspect-ratio: 0.73;  z-index: 5; }
+  .hrow .hcup--p3 { left: 26%;   top: 28%;   width: 22vw; height: auto; aspect-ratio: 0.769; z-index: 4; }
+  .hrow .hcup--p4 { left: 48.5%; top: 31.3%; width: 25vw; height: auto; aspect-ratio: 0.8;   z-index: 3; }
+}
+
+@media (max-width: 1024px) {
+  .menu__pin { height: 100svh; min-height: 0; padding: 10svh 0 4svh; overflow: hidden; }
+  .menu__track { overflow: visible; scroll-snap-type: none; padding-bottom: 0; }
+  .mgroup { scroll-snap-align: none; }
+  .mcard { width: clamp(160px, 34vw, 260px); }
+  .mcard__img { height: auto; min-height: clamp(130px, 28vw, 210px); max-height: none; flex: 1 1 auto; -webkit-overflow-scrolling: auto; }
+  /* short landscape phones: cards size off viewport height instead */
+  @media (max-height: 560px) {
+    .menu__pin { padding: 8svh 0 3svh; }
+    .menu__head { margin-bottom: 10px; }
+    .menu__title { font-size: 24px; }
+    .catchip { font-size: 11px; padding: 6px 11px; }
+    .mcard { width: clamp(120px, 34vh, 170px); }
+    .mcard__img { height: auto; min-height: 0; }
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   v16 — PHONE + TABLET POLISH: ONE CUP SIZE, TIGHTER MENU, NAMED CUPS
+   ════════════════════════════════════════════════════════════════════
+   - Hero cups on ≤1024 are all the SAME height now (the matcha was twice
+     the others). Positions stay exactly where the client drew them.
+   - Menu on touch screens: smaller heading, smaller cards with FIXED card
+     height (no more stretch-to-fill), shelf centres itself, and each
+     item's NAME sits centred directly under its own cup — the
+     left-aligned names used to drift away from their images.          */
+
+@media (max-width: 1024px) {
+  .hrow .hcup--p1, .hrow .hcup--p2, .hrow .hcup--p3, .hrow .hcup--p4 {
+    height: 18.5svh; width: auto;
+  }
+
+  .menu__title { font-size: clamp(22px, 6vw, 34px); }
+  .menu__head { margin-bottom: 14px; }
+  .mgroup__title { font-size: 11px; padding-bottom: 8px; margin-bottom: 12px; }
+  .mcard { width: clamp(112px, 26vw, 180px); }
+  .mshelf { grid-template-rows: repeat(2, auto); align-content: center; gap: 12px; }
+  .mcard__img { flex: none; height: clamp(100px, 24vw, 170px); min-height: 0; }
+  .mcard__foot { text-align: center; padding-top: 8px; }
+  .mcard__name { font-size: 11.5px; }
+  @media (max-height: 560px) {
+    .mcard__img { height: clamp(96px, 30vh, 150px); }
+  }
+}
